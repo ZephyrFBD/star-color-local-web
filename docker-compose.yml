@@ -1,0 +1,10 @@
+services:
+  star-color-web:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "127.0.0.1:8080:80"
+    mem_limit: 96m
+    mem_reservation: 32m
+    cpus: 0.25
+    pids_limit: 64
