@@ -63,6 +63,9 @@ h1 em { color: #97a3b5; font-style: normal; font-weight: 560; }
 .control-head { display: flex; justify-content: space-between; gap: 16px; align-items: baseline; }
 .control-head label, fieldset legend { font-size: .9rem; font-weight: 650; }
 .control-head output { color: #a6c4ff; font-variant-numeric: tabular-nums; }
+.gain-entry { display: inline-flex; align-items: center; gap: 4px; color: #a6c4ff; font-variant-numeric: tabular-nums; }
+.gain-entry input { width: 92px; padding: 6px 8px; border: 1px solid #334154; border-radius: 8px; color: #dbe8ff; background: #0a0e13; text-align: right; }
+.gain-entry span { font-weight: 650; }
 .control small, .switch-row small { display: block; margin-top: 7px; color: #737f90; font-size: .74rem; line-height: 1.4; }
 input[type="range"] { width: 100%; margin: 12px 0 0; accent-color: #8aaffb; }
 .background-choice { display: flex; gap: 8px; margin: 0; padding: 0; border: 0; }
@@ -141,4 +144,5 @@ h2 { margin: 6px 0 0; font-size: 1.5rem; }
   .preview-stage { min-height: 320px; }
   h1 { font-size: 2.6rem; }
   .language-toggle { top: 12px; right: 4px; }
+  .gain-entry input { width: 78px; }
 }

@@ -26,7 +26,7 @@ const TEXT = {
     "hero.title": "Keep the stars.", "hero.subtitle": "Your photos stay on your device.", "hero.description": "RAW decoding, star detection, and PNG generation all run locally in your browser. Original star colors and relative brightness are preserved; the server only delivers static files.",
     "badge.privacy": "🔒 Zero upload · Local processing", "engine.detecting": "Detecting WebGPU…", "engine.enabled": "WebGPU enabled", "engine.cpu": "CPU Worker mode", "engine.inline": "Local main-thread compatibility mode", "engine.available": "WebGPU available; it will be enabled during processing", "engine.unavailable": "WebGPU unavailable; CPU Worker will be used",
     "upload.drop": "Drop photos here", "upload.choose": "or click to choose local files", "upload.formats": "DNG / common camera RAW / JPG / PNG / WebP", "file.batch": "BATCH", "file.remove": "Remove file", "file.clear": "Clear all", "file.selected": "{count} files selected", "file.total": "{size} total · files stay in this tab and are never uploaded", "file.queued": "Queued", "file.decoding": "Decoding", "file.processing": "Processing", "file.done": "Done", "file.failed": "Failed", "file.cancelled": "Cancelled",
-    "control.threshold": "Detection strictness", "control.thresholdHint": "Higher values reduce false positives but may miss faint stars", "control.radius": "Star expansion", "control.radiusHint": "Keep color and glow around each detected star", "control.gain": "Uniform brightness gain", "control.gainHint": "Does not normalize individual stars or images",
+    "control.threshold": "Detection strictness", "control.thresholdHint": "Higher values reduce false positives but may miss faint stars", "control.radius": "Star expansion", "control.radiusHint": "Keep color and glow around each detected star", "control.gain": "Uniform brightness gain", "control.gainSlider": "Brightness gain slider", "control.gainHint": "Slider: 0×–10×. Enter up to 1000× manually; stars are never normalized individually.",
     "background.legend": "Export background", "background.black": "Black", "background.transparent": "Transparent", "background.preserve": "Preserve background", "background.hint": "Preserve background removes detected stars, interpolates a starless background from nearby pixels, then adds the enhanced color stars back.",
     "landscape.title": "Exclude warm landscapes", "landscape.hint": "Reduce trees and building lights detected as stars", "gpu.title": "Prefer WebGPU", "gpu.hint": "Automatically fall back to a CPU Worker when unavailable or unsuccessful", "parallel.title": "Parallel jobs", "parallel.hint": "Memory-aware scheduling may temporarily use fewer jobs",
     "advanced.title": "Advanced detection settings", "advanced.hint": "Every option has a default value", "advanced.core": "Star core scale", "advanced.surround": "Surround scale", "advanced.background": "Background scale", "advanced.minArea": "Minimum star area", "advanced.maxArea": "Maximum star area", "advanced.maxSize": "Maximum star size", "advanced.chroma": "Monochrome spike limit", "advanced.halo": "Halo retention floor", "advanced.sky": "Cool-sky ratio", "advanced.landscapeScale": "Landscape sample spacing", "advanced.landscapeBlur": "Landscape smoothing scale", "advanced.reset": "Restore all defaults",
@@ -42,7 +42,7 @@ const TEXT = {
     "hero.title": "留下星光。", "hero.subtitle": "照片不离开你的电脑。", "hero.description": "RAW 解码、星点检测与 PNG 生成全部在浏览器本地完成。保留每颗星的原始颜色和明暗层次，服务器只提供网页文件。",
     "badge.privacy": "🔒 零上传 · 本地处理", "engine.detecting": "正在检测 WebGPU…", "engine.enabled": "WebGPU 已启用", "engine.cpu": "CPU Worker 模式", "engine.inline": "本地主线程兼容模式", "engine.available": "WebGPU 可用，处理时尝试启用", "engine.unavailable": "WebGPU 不可用，将使用 CPU Worker",
     "upload.drop": "把照片拖到这里", "upload.choose": "或点击选择多个本地文件", "upload.formats": "DNG / 常见相机 RAW / JPG / PNG / WebP", "file.batch": "批量", "file.remove": "移除文件", "file.clear": "全部清除", "file.selected": "已选择 {count} 个文件", "file.total": "共 {size} · 文件仅保存在当前标签页且不会上传", "file.queued": "等待中", "file.decoding": "解码中", "file.processing": "处理中", "file.done": "完成", "file.failed": "失败", "file.cancelled": "已取消",
-    "control.threshold": "检测严格度", "control.thresholdHint": "越高越少误检，暗星也可能减少", "control.radius": "星点外扩", "control.radiusHint": "保留星点周围的颜色与光晕", "control.gain": "统一亮度倍率", "control.gainHint": "不会对单颗星或单张照片自动归一化",
+    "control.threshold": "检测严格度", "control.thresholdHint": "越高越少误检，暗星也可能减少", "control.radius": "星点外扩", "control.radiusHint": "保留星点周围的颜色与光晕", "control.gain": "统一亮度倍率", "control.gainSlider": "亮度倍率滑块", "control.gainHint": "滑块范围 0×–10×；可手动输入最高 1000×，不会对单颗星自动归一化。",
     "background.legend": "导出背景", "background.black": "黑色", "background.transparent": "透明", "background.preserve": "保留背景", "background.hint": "“保留背景”会先移除星点并从周围像素插值得到无星背景，再叠回增强后的彩色星光。",
     "landscape.title": "排除暖色地景", "landscape.hint": "减少树木、建筑灯光被识别为星点", "gpu.title": "优先使用 WebGPU", "gpu.hint": "不可用或失败时自动回退 CPU Worker", "parallel.title": "并行任务数", "parallel.hint": "内存感知调度可能临时减少实际并发数",
     "advanced.title": "高级检测参数", "advanced.hint": "全部参数均有默认值", "advanced.core": "星核尺度", "advanced.surround": "周边尺度", "advanced.background": "背景尺度", "advanced.minArea": "最小星点面积", "advanced.maxArea": "最大星点面积", "advanced.maxSize": "最大星点边长", "advanced.chroma": "单色尖峰上限", "advanced.halo": "光晕保留阈值", "advanced.sky": "天空冷色比例", "advanced.landscapeScale": "地景采样间隔", "advanced.landscapeBlur": "地景平滑尺度", "advanced.reset": "恢复全部默认值",
@@ -61,7 +61,7 @@ const t = (key, values = {}) => Object.entries(values).reduce((text, [name, valu
 const $ = (selector) => document.querySelector(selector);
 const elements = {
   fileInput: $("#fileInput"), dropZone: $("#dropZone"), fileCard: $("#fileCard"), fileName: $("#fileName"), fileSize: $("#fileSize"),
-  fileList: $("#fileList"), removeFile: $("#removeFile"), extract: $("#extractButton"), buttonLabel: $("#buttonLabel"), engine: $("#engineBadge"), parallelism: $("#parallelism"),
+  fileList: $("#fileList"), removeFile: $("#removeFile"), extract: $("#extractButton"), buttonLabel: $("#buttonLabel"), engine: $("#engineBadge"), parallelism: $("#parallelism"), gainInput: $("#gainInput"),
   progressBox: $("#progressBox"), progressStage: $("#progressStage"), progressValue: $("#progressValue"), progressBar: $("#progressBar"), progressDetail: $("#progressDetail"),
   status: $("#status"), processing: $("#processing"), emptyPreview: $("#emptyPreview"), resultImage: $("#resultImage"),
   resultMeta: $("#resultMeta"), resultList: $("#resultList"), download: $("#downloadButton"), downloadAll: $("#downloadAllButton"), reset: $("#resetDefaults"), language: $("#languageToggle"),
@@ -310,16 +310,17 @@ function setBusy(busy) {
 
 function numberValue(id) {
   const input = document.getElementById(id);
-  const value = Number(input.value);
+  const raw = input.value.trim();
+  const value = Number(raw);
   const min = Number(input.min);
   const max = Number(input.max);
-  if (!Number.isFinite(value) || value < min || value > max) throw new Error(t("error.outOfRange", { field: input.closest("label")?.innerText?.split("\n")[0] || id }));
+  if (raw === "" || !Number.isFinite(value) || value < min || value > max) throw new Error(t("error.outOfRange", { field: input.closest("label")?.innerText?.split("\n")[0] || id }));
   return value;
 }
 
 function options() {
   const value = {
-    threshold: numberValue("threshold"), radius: numberValue("radius"), gain: numberValue("gain"),
+    threshold: numberValue("threshold"), radius: numberValue("radius"), gain: numberValue("gainInput"),
     background: document.querySelector('input[name="background"]:checked').value,
     landscapeFilter: $("#landscapeFilter").checked, preferGpu: $("#preferGpu").checked,
     coreSigma: numberValue("coreSigma"), surroundSigma: numberValue("surroundSigma"), backgroundSigma: numberValue("backgroundSigma"),
@@ -591,6 +592,7 @@ function resetDefaults() {
     else {
       const input = document.getElementById(key);
       if (input) input.type === "checkbox" ? input.checked = value : input.value = value;
+      if (key === "gain") elements.gainInput.value = value;
     }
   }
   updateRangeLabels();
@@ -600,7 +602,16 @@ function resetDefaults() {
 function updateRangeLabels() {
   $("#thresholdValue").textContent = Number($("#threshold").value).toFixed(1);
   $("#radiusValue").textContent = `${$("#radius").value} px`;
-  $("#gainValue").textContent = `${Number($("#gain").value).toFixed(2)}×`;
+}
+
+function syncGainFromSlider() {
+  elements.gainInput.value = Number($("#gain").value).toFixed(2).replace(/\.00$/, "");
+}
+
+function syncSliderFromGain() {
+  const value = Number(elements.gainInput.value);
+  if (!Number.isFinite(value)) return;
+  $("#gain").value = Math.max(0, Math.min(10, value));
 }
 
 elements.fileInput.addEventListener("change", () => addFiles(elements.fileInput.files));
@@ -610,7 +621,9 @@ elements.download.addEventListener("click", downloadResult);
 elements.downloadAll.addEventListener("click", downloadAllResults);
 elements.reset.addEventListener("click", resetDefaults);
 elements.language.addEventListener("click", toggleLocale);
-for (const id of ["threshold", "radius", "gain"]) document.getElementById(id).addEventListener("input", updateRangeLabels);
+for (const id of ["threshold", "radius"]) document.getElementById(id).addEventListener("input", updateRangeLabels);
+$("#gain").addEventListener("input", syncGainFromSlider);
+elements.gainInput.addEventListener("input", syncSliderFromGain);
 for (const eventName of ["dragenter", "dragover"]) elements.dropZone.addEventListener(eventName, (event) => { event.preventDefault(); elements.dropZone.classList.add("dragging"); });
 for (const eventName of ["dragleave", "drop"]) elements.dropZone.addEventListener(eventName, (event) => { event.preventDefault(); elements.dropZone.classList.remove("dragging"); });
 elements.dropZone.addEventListener("drop", (event) => addFiles(event.dataTransfer.files));

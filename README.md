@@ -10,6 +10,7 @@ The interface defaults to English and can be switched to Chinese at any time.
 - Decodes supported RAW files at full resolution with 16-bit linear data and camera white balance. It does not use embedded previews or silently downsample images.
 - Preserves each star's original color and relative brightness instead of normalizing faint and bright stars to the same level.
 - Provides adjustable detection strictness, expansion radius, brightness gain, background mode, Gaussian scales, area and size limits, chroma filtering, halo retention, and landscape filtering. Every option has a default value.
+- Keeps the common brightness-gain slider at 0×–10× while allowing precise manual values from 0× to 1000×; the default remains 5×.
 - Offers black, transparent, and preserved-background output. Preserve-background mode removes detected stars, reconstructs a starless background from nearby non-star pixels, and adds the uniformly enhanced linear starlight back.
 - Tries WebGPU after a correctness self-test and automatically falls back to a CPU Worker if WebGPU is unavailable or fails.
 - Shows staged progress, a preview, and a downloadable PNG.
