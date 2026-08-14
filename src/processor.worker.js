@@ -383,8 +383,9 @@ async function encodeResult(mask, backgrounds, options, debug = false) {
   const debugInpaint = debug && options.background === "preserve" ? new Float32Array(n * 3) : null;
   const opaque = options.background === "black";
   const preserve = options.background === "preserve";
-  const inpaintMask = preserve ? dilateMask(mask, Math.max(3, options.radius + 3)) : mask;
-  const inpaintDistance = Math.max(16, options.maxSize + options.radius * 3 + 8);
+  const repairRadius = Math.max(0, Math.round(options.repairRadius ?? 3));
+  const inpaintMask = preserve ? dilateMask(mask, repairRadius) : mask;
+  const inpaintDistance = Math.max(16, options.maxSize + options.radius + repairRadius * 2 + 8);
   for (let i = 0; i < n; i++) {
     const out = i * 4;
     if (preserve) {
