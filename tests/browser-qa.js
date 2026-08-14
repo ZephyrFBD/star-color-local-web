@@ -28,7 +28,7 @@ for (let y = 0; y < height; y++) {
 }
 
 const defaults = {
-  threshold: 8, radius: 3, gain: 1, background: "preserve", landscapeFilter: false, preferGpu: false,
+  threshold: 8, radius: 3, repairRadius: 3, gain: 1, background: "preserve", landscapeFilter: false, preferGpu: false,
   coreSigma: 0.65, surroundSigma: 3, backgroundSigma: 12, minArea: 1, maxArea: 60, maxSize: 14,
   chromaLimit: 0.72, haloFloor: 0.2, skyRatio: 0.9, landscapeScale: 16, landscapeBlur: 4,
 };

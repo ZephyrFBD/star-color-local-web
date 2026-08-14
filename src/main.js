@@ -2,6 +2,7 @@ const RAW_EXTENSIONS = new Set(["dng", "nef", "nrw", "cr2", "cr3", "arw", "raf",
 const DEFAULTS = Object.freeze({
   threshold: 8,
   radius: 3,
+  repairRadius: 3,
   gain: 5,
   background: "preserve",
   landscapeFilter: true,
@@ -26,9 +27,11 @@ const TEXT = {
     "hero.title": "Keep the stars.", "hero.subtitle": "Your photos stay on your device.", "hero.description": "RAW decoding, star detection, and PNG generation all run locally in your browser. Original star colors and relative brightness are preserved; the server only delivers static files.",
     "badge.privacy": "🔒 Zero upload · Local processing", "engine.detecting": "Detecting WebGPU…", "engine.enabled": "WebGPU enabled", "engine.cpu": "CPU Worker mode", "engine.inline": "Local main-thread compatibility mode", "engine.available": "WebGPU available; it will be enabled during processing", "engine.unavailable": "WebGPU unavailable; CPU Worker will be used",
     "upload.drop": "Drop photos here", "upload.choose": "or click to choose local files", "upload.formats": "DNG / common camera RAW / JPG / PNG / WebP", "file.batch": "BATCH", "file.remove": "Remove file", "file.clear": "Clear all", "file.selected": "{count} files selected", "file.total": "{size} total · files stay in this tab and are never uploaded", "file.queued": "Queued", "file.decoding": "Decoding", "file.processing": "Processing", "file.done": "Done", "file.failed": "Failed", "file.cancelled": "Cancelled",
-    "control.threshold": "Detection strictness", "control.thresholdHint": "Higher values reduce false positives but may miss faint stars", "control.radius": "Star expansion", "control.radiusHint": "Keep color and glow around each detected star", "control.gain": "Uniform brightness gain", "control.gainSlider": "Brightness gain slider", "control.gainHint": "Slider: 0×–10×. Enter up to 1000× manually; stars are never normalized individually.",
+    "control.threshold": "Detection strictness", "control.thresholdHint": "Higher values reduce false positives but may miss faint stars", "control.radius": "Star expansion", "control.radiusHint": "Keep color and glow around each detected star", "control.repairRadius": "Background repair expansion", "control.repairRadiusHint": "Exclude this many extra pixels beyond the detected star footprint when sampling a starless background", "control.gain": "Uniform brightness gain", "control.gainSlider": "Brightness gain slider", "control.gainHint": "Stars are never normalized individually.",
     "background.legend": "Export background", "background.black": "Black", "background.transparent": "Transparent", "background.preserve": "Preserve background", "background.hint": "Preserve background removes detected stars, interpolates a starless background from nearby pixels, then adds the enhanced color stars back.",
     "landscape.title": "Exclude warm landscapes", "landscape.hint": "Reduce trees and building lights detected as stars", "gpu.title": "Prefer WebGPU", "gpu.hint": "Automatically fall back to a CPU Worker when unavailable or unsuccessful", "parallel.title": "Parallel jobs", "parallel.hint": "Memory-aware scheduling may temporarily use fewer jobs",
+    "range.threshold": "Range: 4–14 · Default: 8", "range.radius": "Range: 0–6 px · Default: 3 px", "range.repairRadius": "Range: 0–64 px · Default: 3 px", "range.gain": "Slider: 0×–10× · Manual: 0×–1000× · Default: 5×", "range.background": "Options: Black / Transparent / Preserve · Default: Preserve", "range.landscape": "Options: Off / On · Default: On", "range.gpu": "Options: Off / On · Default: On", "range.parallel": "Range: 1–4 · Default: 2",
+    "range.core": "Range: 0.25–2 · Default: 0.65", "range.surround": "Range: 1–10 · Default: 3", "range.backgroundSigma": "Range: 4–40 · Default: 12", "range.minArea": "Range: 1–20 px² · Default: 1 px²", "range.maxArea": "Range: 1–400 px² · Default: 60 px²", "range.maxSize": "Range: 3–60 px · Default: 14 px", "range.chroma": "Range: 0.34–1 · Default: 0.72", "range.halo": "Range: -1–3 · Default: 0.2", "range.sky": "Range: 0.5–1.2 · Default: 0.9", "range.landscapeScale": "Range: 4–64 px · Default: 16 px", "range.landscapeBlur": "Range: 0–12 · Default: 4",
     "advanced.title": "Advanced detection settings", "advanced.hint": "Every option has a default value", "advanced.core": "Star core scale", "advanced.surround": "Surround scale", "advanced.background": "Background scale", "advanced.minArea": "Minimum star area", "advanced.maxArea": "Maximum star area", "advanced.maxSize": "Maximum star size", "advanced.chroma": "Monochrome spike limit", "advanced.halo": "Halo retention floor", "advanced.sky": "Cool-sky ratio", "advanced.landscapeScale": "Landscape sample spacing", "advanced.landscapeBlur": "Landscape smoothing scale", "advanced.reset": "Restore all defaults",
     "action.extract": "Extract color stars locally", "action.extractBatch": "Process {count} files locally", "action.processing": "Processing locally…", "action.processingBatch": "Processing {count} files…", "action.download": "Download color PNG", "action.downloadSelected": "Download selected PNG", "action.downloadAll": "Download all completed PNGs", "progress.readFile": "Read file", "progress.notStarted": "Not started",
     "preview.title": "Color stars", "preview.waiting": "Waiting", "preview.empty": "Your local result will appear here", "preview.alt": "Extracted color stars", "preview.processing": "Analyzing starlight locally…", "privacy.footer": "Photo data is never sent over the network. Closing or refreshing this tab releases the temporary processing data.",
@@ -42,9 +45,11 @@ const TEXT = {
     "hero.title": "留下星光。", "hero.subtitle": "照片不离开你的电脑。", "hero.description": "RAW 解码、星点检测与 PNG 生成全部在浏览器本地完成。保留每颗星的原始颜色和明暗层次，服务器只提供网页文件。",
     "badge.privacy": "🔒 零上传 · 本地处理", "engine.detecting": "正在检测 WebGPU…", "engine.enabled": "WebGPU 已启用", "engine.cpu": "CPU Worker 模式", "engine.inline": "本地主线程兼容模式", "engine.available": "WebGPU 可用，处理时尝试启用", "engine.unavailable": "WebGPU 不可用，将使用 CPU Worker",
     "upload.drop": "把照片拖到这里", "upload.choose": "或点击选择多个本地文件", "upload.formats": "DNG / 常见相机 RAW / JPG / PNG / WebP", "file.batch": "批量", "file.remove": "移除文件", "file.clear": "全部清除", "file.selected": "已选择 {count} 个文件", "file.total": "共 {size} · 文件仅保存在当前标签页且不会上传", "file.queued": "等待中", "file.decoding": "解码中", "file.processing": "处理中", "file.done": "完成", "file.failed": "失败", "file.cancelled": "已取消",
-    "control.threshold": "检测严格度", "control.thresholdHint": "越高越少误检，暗星也可能减少", "control.radius": "星点外扩", "control.radiusHint": "保留星点周围的颜色与光晕", "control.gain": "统一亮度倍率", "control.gainSlider": "亮度倍率滑块", "control.gainHint": "滑块范围 0×–10×；可手动输入最高 1000×，不会对单颗星自动归一化。",
+    "control.threshold": "检测严格度", "control.thresholdHint": "越高越少误检，暗星也可能减少", "control.radius": "星点外扩", "control.radiusHint": "保留星点周围的颜色与光晕", "control.repairRadius": "背景修复扩展", "control.repairRadiusHint": "生成无星背景时，在已识别星点范围之外额外排除的采样距离", "control.gain": "统一亮度倍率", "control.gainSlider": "亮度倍率滑块", "control.gainHint": "不会对单颗星自动归一化。",
     "background.legend": "导出背景", "background.black": "黑色", "background.transparent": "透明", "background.preserve": "保留背景", "background.hint": "“保留背景”会先移除星点并从周围像素插值得到无星背景，再叠回增强后的彩色星光。",
     "landscape.title": "排除暖色地景", "landscape.hint": "减少树木、建筑灯光被识别为星点", "gpu.title": "优先使用 WebGPU", "gpu.hint": "不可用或失败时自动回退 CPU Worker", "parallel.title": "并行任务数", "parallel.hint": "内存感知调度可能临时减少实际并发数",
+    "range.threshold": "范围：4–14 · 默认：8", "range.radius": "范围：0–6 px · 默认：3 px", "range.repairRadius": "范围：0–64 px · 默认：3 px", "range.gain": "滑块：0×–10× · 手动输入：0×–1000× · 默认：5×", "range.background": "选项：黑色 / 透明 / 保留背景 · 默认：保留背景", "range.landscape": "选项：关 / 开 · 默认：开", "range.gpu": "选项：关 / 开 · 默认：开", "range.parallel": "范围：1–4 · 默认：2",
+    "range.core": "范围：0.25–2 · 默认：0.65", "range.surround": "范围：1–10 · 默认：3", "range.backgroundSigma": "范围：4–40 · 默认：12", "range.minArea": "范围：1–20 px² · 默认：1 px²", "range.maxArea": "范围：1–400 px² · 默认：60 px²", "range.maxSize": "范围：3–60 px · 默认：14 px", "range.chroma": "范围：0.34–1 · 默认：0.72", "range.halo": "范围：-1–3 · 默认：0.2", "range.sky": "范围：0.5–1.2 · 默认：0.9", "range.landscapeScale": "范围：4–64 px · 默认：16 px", "range.landscapeBlur": "范围：0–12 · 默认：4",
     "advanced.title": "高级检测参数", "advanced.hint": "全部参数均有默认值", "advanced.core": "星核尺度", "advanced.surround": "周边尺度", "advanced.background": "背景尺度", "advanced.minArea": "最小星点面积", "advanced.maxArea": "最大星点面积", "advanced.maxSize": "最大星点边长", "advanced.chroma": "单色尖峰上限", "advanced.halo": "光晕保留阈值", "advanced.sky": "天空冷色比例", "advanced.landscapeScale": "地景采样间隔", "advanced.landscapeBlur": "地景平滑尺度", "advanced.reset": "恢复全部默认值",
     "action.extract": "在本机提取彩色星点", "action.extractBatch": "在本机处理 {count} 个文件", "action.processing": "正在本机处理…", "action.processingBatch": "正在处理 {count} 个文件…", "action.download": "下载彩色 PNG", "action.downloadSelected": "下载当前 PNG", "action.downloadAll": "下载全部已完成 PNG", "progress.readFile": "读取文件", "progress.notStarted": "尚未开始",
     "preview.title": "彩色星点", "preview.waiting": "等待处理", "preview.empty": "本地处理结果将在这里显示", "preview.alt": "彩色星点提取结果", "preview.processing": "正在本机分析星光…", "privacy.footer": "照片内容不会通过网络发送。关闭或刷新页面后，本次处理数据即从页面内存中释放。",
@@ -320,7 +325,7 @@ function numberValue(id) {
 
 function options() {
   const value = {
-    threshold: numberValue("threshold"), radius: numberValue("radius"), gain: numberValue("gainInput"),
+    threshold: numberValue("threshold"), radius: numberValue("radius"), repairRadius: numberValue("repairRadius"), gain: numberValue("gainInput"),
     background: document.querySelector('input[name="background"]:checked').value,
     landscapeFilter: $("#landscapeFilter").checked, preferGpu: $("#preferGpu").checked,
     coreSigma: numberValue("coreSigma"), surroundSigma: numberValue("surroundSigma"), backgroundSigma: numberValue("backgroundSigma"),
@@ -602,6 +607,7 @@ function resetDefaults() {
 function updateRangeLabels() {
   $("#thresholdValue").textContent = Number($("#threshold").value).toFixed(1);
   $("#radiusValue").textContent = `${$("#radius").value} px`;
+  $("#repairRadiusValue").textContent = `${$("#repairRadius").value} px`;
 }
 
 function syncGainFromSlider() {
@@ -621,7 +627,7 @@ elements.download.addEventListener("click", downloadResult);
 elements.downloadAll.addEventListener("click", downloadAllResults);
 elements.reset.addEventListener("click", resetDefaults);
 elements.language.addEventListener("click", toggleLocale);
-for (const id of ["threshold", "radius"]) document.getElementById(id).addEventListener("input", updateRangeLabels);
+for (const id of ["threshold", "radius", "repairRadius"]) document.getElementById(id).addEventListener("input", updateRangeLabels);
 $("#gain").addEventListener("input", syncGainFromSlider);
 elements.gainInput.addEventListener("input", syncSliderFromGain);
 for (const eventName of ["dragenter", "dragover"]) elements.dropZone.addEventListener(eventName, (event) => { event.preventDefault(); elements.dropZone.classList.add("dragging"); });
