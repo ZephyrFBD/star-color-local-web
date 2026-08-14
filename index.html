@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#07090d" />
-    <meta name="star-color-build" content="multi-file-v2.3.2" />
+    <meta name="star-color-build" content="multi-file-v2.4.0" />
     <meta name="description" content="A color star extractor that processes photos entirely in your browser" />
     <title>Local Color Star Extractor</title>
     <link rel="stylesheet" href="/src/styles.css" />
@@ -48,6 +48,9 @@
             <fieldset class="background-choice"><legend data-i18n="background.legend">Export background</legend><label><input type="radio" name="background" value="black" /><span data-i18n="background.black">Black</span></label><label><input type="radio" name="background" value="transparent" /><span data-i18n="background.transparent">Transparent</span></label><label><input type="radio" name="background" value="preserve" checked /><span data-i18n="background.preserve">Preserve background</span></label></fieldset>
             <p class="background-hint" data-i18n="background.hint">Preserve background removes detected stars, interpolates a starless background from nearby pixels, then adds the enhanced color stars back.</p>
             <small class="control-range standalone-range" data-i18n="range.background">Options: Black / Transparent / Preserve · Default: Preserve</small>
+            <label class="switch-row"><span><strong data-i18n="hdr.title">HDR star output</strong><small data-i18n="hdr.hint">Export a 16-bit Rec.2100 PQ PNG; only detected starlight receives the extra HDR gain</small></span><input id="hdrOutput" type="checkbox" /><i></i></label>
+            <small class="control-range standalone-range" data-i18n="range.hdr">Options: Off / On · Default: Off</small>
+            <label class="number-control hdr-gain-control"><span data-i18n="hdr.gain">HDR starlight gain</span><small data-i18n="range.hdrGain">Range: 1×–1000× · Default: 1×</small><input id="hdrGain" type="number" min="1" max="1000" step="0.01" value="1" inputmode="decimal" /></label>
             <div class="control"><div class="control-head"><label for="repairRadius" data-i18n="control.repairRadius">Background repair expansion</label><output id="repairRadiusValue">3 px</output></div><input id="repairRadius" type="range" min="0" max="64" step="1" value="3" /><small data-i18n="control.repairRadiusHint">Exclude this many extra pixels beyond the detected star footprint when sampling a starless background</small><small class="control-range" data-i18n="range.repairRadius">Range: 0–64 px · Default: 3 px</small></div>
             <label class="switch-row"><span><strong data-i18n="landscape.title">Exclude warm landscapes</strong><small data-i18n="landscape.hint">Reduce trees and building lights detected as stars</small></span><input id="landscapeFilter" type="checkbox" checked /><i></i></label>
             <small class="control-range standalone-range" data-i18n="range.landscape">Options: Off / On · Default: On</small>

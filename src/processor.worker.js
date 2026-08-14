@@ -1,4 +1,5 @@
 import { WebGpuGaussian } from "./webgpu.js";
+import { encodeHdrPng } from "./hdr-png.js";
 
 let gpu = null;
 let source;
@@ -379,15 +380,13 @@ function dilateMask(mask, iterations) {
 
 async function encodeResult(mask, backgrounds, options, debug = false) {
   const n = width * height;
-  const rgba = new Uint8ClampedArray(n * 4);
   const debugInpaint = debug && options.background === "preserve" ? new Float32Array(n * 3) : null;
   const opaque = options.background === "black";
   const preserve = options.background === "preserve";
   const repairRadius = Math.max(0, Math.round(options.repairRadius ?? 3));
   const inpaintMask = preserve ? dilateMask(mask, repairRadius) : mask;
   const inpaintDistance = Math.max(16, options.maxSize + options.radius + repairRadius * 2 + 8);
-  for (let i = 0; i < n; i++) {
-    const out = i * 4;
+  const readLinearPixel = (i, rgba, hdrGain = 1) => {
     if (preserve) {
       for (let c = 0; c < 3; c++) {
         const original = sourceValue(i, c);
@@ -395,26 +394,46 @@ async function encodeResult(mask, backgrounds, options, debug = false) {
         if (mask[i]) {
           const cleanBackground = interpolatedBackground(i, c, inpaintMask, backgrounds[c][i], inpaintDistance);
           if (debugInpaint) debugInpaint[i * 3 + c] = cleanBackground;
-          const starSignal = Math.max(0, original - cleanBackground) * options.gain;
+          const starSignal = Math.max(0, original - cleanBackground) * options.gain * hdrGain;
           value = cleanBackground + starSignal;
         }
-        rgba[out + c] = linearToByte(value);
+        rgba[c] = value;
       }
-      rgba[out + 3] = 255;
+      rgba[3] = 1;
     } else if (mask[i]) {
-      rgba[out] = linearToByte(Math.max(0, sourceValue(i, 0) - backgrounds[0][i]) * options.gain);
-      rgba[out + 1] = linearToByte(Math.max(0, sourceValue(i, 1) - backgrounds[1][i]) * options.gain);
-      rgba[out + 2] = linearToByte(Math.max(0, sourceValue(i, 2) - backgrounds[2][i]) * options.gain);
-      rgba[out + 3] = 255;
+      rgba[0] = Math.max(0, sourceValue(i, 0) - backgrounds[0][i]) * options.gain * hdrGain;
+      rgba[1] = Math.max(0, sourceValue(i, 1) - backgrounds[1][i]) * options.gain * hdrGain;
+      rgba[2] = Math.max(0, sourceValue(i, 2) - backgrounds[2][i]) * options.gain * hdrGain;
+      rgba[3] = 1;
     } else {
-      rgba[out + 3] = opaque ? 255 : 0;
+      rgba[0] = rgba[1] = rgba[2] = 0;
+      rgba[3] = opaque ? 1 : 0;
     }
+  };
+  if (options.hdrOutput) {
+    const hdrGain = Math.max(1, Math.min(1000, Number(options.hdrGain) || 1));
+    const pixel = new Float64Array(4);
+    const blob = await encodeHdrPng(width, height, (i, rgba) => {
+      readLinearPixel(i, pixel, hdrGain);
+      rgba.set(pixel);
+    }, (progress) => sendProgress(91 + progress * 8, tr("Encode 16-bit HDR PNG", "编码 16 位 HDR PNG"), tr("BT.2020 · PQ · HDR stars only", "BT.2020 · PQ · 仅星光进入 HDR")));
+    return { blob, debugInpaint, dynamicRange: "hdr" };
+  }
+  const rgba = new Uint8ClampedArray(n * 4);
+  const linear = new Float64Array(4);
+  for (let i = 0; i < n; i++) {
+    readLinearPixel(i, linear);
+    const out = i * 4;
+    rgba[out] = linearToByte(linear[0]);
+    rgba[out + 1] = linearToByte(linear[1]);
+    rgba[out + 2] = linearToByte(linear[2]);
+    rgba[out + 3] = Math.round(linear[3] * 255);
     if ((i & 1048575) === 0) await pause();
   }
   const canvas = new OffscreenCanvas(width, height);
   const context = canvas.getContext("2d", { alpha: true });
   context.putImageData(new ImageData(rgba, width, height), 0, 0);
-  return { blob: await canvas.convertToBlob({ type: "image/png" }), debugInpaint };
+  return { blob: await canvas.convertToBlob({ type: "image/png" }), debugInpaint, dynamicRange: "sdr" };
 }
 
 self.onmessage = async ({ data: message }) => {
@@ -492,7 +511,7 @@ self.onmessage = async ({ data: message }) => {
     sendProgress(100, tr("Processing complete", "处理完成"), tr(`${localizedNumber(accepted.length)} stars · ${(blob.size / 1024 / 1024).toFixed(1)} MB PNG`, `${localizedNumber(accepted.length)} 颗星 · ${(blob.size / 1024 / 1024).toFixed(1)} MB PNG`));
     gpu?.destroy();
     gpu = null;
-    const result = { type: "result", blob, width, height, stars: accepted.length, pixels: footprint.pixels };
+    const result = { type: "result", blob, width, height, stars: accepted.length, pixels: footprint.pixels, dynamicRange: encoded.dynamicRange };
     if (message.debug) {
       result.debugMask = footprint.mask.buffer;
       result.debugInpaint = encoded.debugInpaint?.buffer;
