@@ -13,6 +13,8 @@ The interface defaults to English and can be switched to Chinese at any time.
 - Offers black, transparent, and preserved-background output. Preserve-background mode removes detected stars, reconstructs a starless background from nearby non-star pixels, and adds the uniformly enhanced linear starlight back.
 - Tries WebGPU after a correctness self-test and automatically falls back to a CPU Worker if WebGPU is unavailable or fails.
 - Shows staged progress, a preview, and a downloadable PNG.
+- Imports many files at once and processes up to four jobs concurrently. The default is two, with memory-aware scheduling that reduces active jobs when large RAW files would exceed a conservative client-side memory budget.
+- Shows an aggregate batch percentage plus independent stage, progress, success, and failure states for every file. Completed outputs can be previewed and downloaded individually or together.
 
 ## Single-file build
 

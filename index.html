@@ -25,16 +25,19 @@
       <section class="workspace">
         <div class="upload-panel">
           <label id="dropZone" class="drop-zone" for="fileInput">
-            <input id="fileInput" type="file" accept=".dng,.nef,.nrw,.cr2,.cr3,.arw,.raf,.rw2,.orf,.pef,.raw,.jpg,.jpeg,.png,.webp" />
-            <span class="upload-icon">↥</span><strong data-i18n="upload.drop">Drop a photo here</strong>
-            <span data-i18n="upload.choose">or click to choose a local file</span>
+            <input id="fileInput" type="file" multiple accept=".dng,.nef,.nrw,.cr2,.cr3,.arw,.raf,.rw2,.orf,.pef,.raw,.jpg,.jpeg,.png,.webp" />
+            <span class="upload-icon">↥</span><strong data-i18n="upload.drop">Drop photos here</strong>
+            <span data-i18n="upload.choose">or click to choose local files</span>
             <small data-i18n="upload.formats">DNG / common camera RAW / JPG / PNG / WebP</small>
           </label>
 
-          <div id="fileCard" class="file-card hidden">
-            <div class="file-mark">RAW</div>
-            <div class="file-copy"><strong id="fileName"></strong><span id="fileSize"></span></div>
-            <button id="removeFile" class="icon-button" aria-label="Remove file" data-i18n-aria="file.remove">×</button>
+          <div id="fileCard" class="file-card batch-card hidden">
+            <div class="batch-summary">
+              <div class="file-mark" data-i18n="file.batch">BATCH</div>
+              <div class="file-copy"><strong id="fileName"></strong><span id="fileSize"></span></div>
+              <button id="removeFile" class="clear-files-button" type="button" data-i18n="file.clear">Clear all</button>
+            </div>
+            <div id="fileList" class="file-list"></div>
           </div>
 
           <div class="controls">
@@ -45,6 +48,7 @@
             <p class="background-hint" data-i18n="background.hint">Preserve background removes detected stars, interpolates a starless background from nearby pixels, then adds the enhanced color stars back.</p>
             <label class="switch-row"><span><strong data-i18n="landscape.title">Exclude warm landscapes</strong><small data-i18n="landscape.hint">Reduce trees and building lights detected as stars</small></span><input id="landscapeFilter" type="checkbox" checked /><i></i></label>
             <label class="switch-row"><span><strong data-i18n="gpu.title">Prefer WebGPU</strong><small data-i18n="gpu.hint">Automatically fall back to a CPU Worker when unavailable or unsuccessful</small></span><input id="preferGpu" type="checkbox" checked /><i></i></label>
+            <label class="parallel-row"><span><strong data-i18n="parallel.title">Parallel jobs</strong><small data-i18n="parallel.hint">Memory-aware scheduling may temporarily use fewer jobs</small></span><select id="parallelism" aria-label="Parallel jobs" data-i18n-aria="parallel.title"><option value="1">1</option><option value="2" selected>2</option><option value="3">3</option><option value="4">4</option></select></label>
 
             <details class="advanced-settings">
               <summary><span data-i18n="advanced.title">Advanced detection settings</span><small data-i18n="advanced.hint">Every option has a default value</small></summary>
@@ -72,7 +76,9 @@
         <div class="preview-panel">
           <div class="preview-head"><div><span class="eyebrow">LOCAL OUTPUT</span><h2 data-i18n="preview.title">Color stars</h2></div><span id="resultMeta" class="result-meta" data-i18n="preview.waiting">Waiting</span></div>
           <div class="preview-stage"><div id="emptyPreview" class="empty-preview"><span>✦</span><p data-i18n="preview.empty">Your local result will appear here</p></div><img id="resultImage" class="hidden" alt="Extracted color stars" data-i18n-alt="preview.alt" /><div id="processing" class="processing hidden"><span class="spinner"></span><p data-i18n="preview.processing">Analyzing starlight locally…</p></div></div>
-          <button id="downloadButton" class="download-button" disabled><span data-i18n="action.download">Download color PNG</span> <span>↓</span></button>
+          <div id="resultList" class="result-list hidden"></div>
+          <button id="downloadButton" class="download-button" disabled><span data-i18n="action.downloadSelected">Download selected PNG</span> <span>↓</span></button>
+          <button id="downloadAllButton" class="download-all-button hidden" disabled data-i18n="action.downloadAll">Download all completed PNGs</button>
           <p class="privacy" data-i18n="privacy.footer">Photo data is never sent over the network. Closing or refreshing this tab releases the temporary processing data.</p>
         </div>
       </section>
