@@ -40,24 +40,25 @@ fn main(@builtin(global_invocation_id) gid: vec3<u32>) {
 `;
 
 export class WebGpuGaussian {
-  static async create(width, height) {
-    if (!globalThis.navigator?.gpu) throw new Error("此浏览器未提供 WebGPU");
+  static async create(width, height, locale = "en") {
+    const message = (english, chinese) => locale === "zh" ? chinese : english;
+    if (!globalThis.navigator?.gpu) throw new Error(message("This browser does not provide WebGPU", "此浏览器未提供 WebGPU"));
     const adapter = await navigator.gpu.requestAdapter({ powerPreference: "high-performance" });
-    if (!adapter) throw new Error("没有可用的 WebGPU 适配器");
+    if (!adapter) throw new Error(message("No WebGPU adapter is available", "没有可用的 WebGPU 适配器"));
     const tileBytes = Math.min(width * height, 1_500_000) * 4;
-    if (tileBytes > adapter.limits.maxStorageBufferBindingSize) throw new Error("当前 WebGPU 缓冲区限制过低");
+    if (tileBytes > adapter.limits.maxStorageBufferBindingSize) throw new Error(message("The current WebGPU buffer limit is too low", "当前 WebGPU 缓冲区限制过低"));
     const device = await adapter.requestDevice();
-    const engine = await WebGpuGaussian.createForDevice(device, width, height);
+    const engine = await WebGpuGaussian.createForDevice(device, width, height, locale);
     const probe = new Float32Array(16).fill(1);
     const checked = await engine.runPass(probe, 4, 4, 0.65, true);
     if (!checked.every((value) => Number.isFinite(value) && value > 0.9)) {
       engine.destroy();
-      throw new Error("WebGPU 自检结果异常");
+      throw new Error(message("WebGPU self-test returned an invalid result", "WebGPU 自检结果异常"));
     }
     return engine;
   }
 
-  static async createForDevice(device, width, height) {
+  static async createForDevice(device, width, height, locale = "en") {
     const module = device.createShaderModule({ label: "Gaussian blur shader", code: shader });
     const compilation = await module.getCompilationInfo();
     const errors = compilation.messages.filter((message) => message.type === "error");
@@ -78,7 +79,8 @@ export class WebGpuGaussian {
     } catch (error) {
       try { await device.popErrorScope(); } catch {}
       device.destroy();
-      throw new Error(`WebGPU 管线创建失败：${error?.message || error}`);
+      const prefix = locale === "zh" ? "WebGPU 管线创建失败：" : "WebGPU pipeline creation failed: ";
+      throw new Error(`${prefix}${error?.message || error}`);
     }
     return new WebGpuGaussian(device, width, height, pipeline);
   }
