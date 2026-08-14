@@ -29,9 +29,15 @@ The output is `single/star-color-local.html`. It embeds the interface, processin
 
 The single HTML can be opened directly with `file://`. In that mode it uses a main-thread compatibility wrapper because browsers do not allow module Workers to load from local files. RAW decoding and image processing remain fully local.
 
+The same generated file is written to `docs/index.html` and committed for GitHub Pages. It contains the complete app, Workers, RAW runtime, WebAssembly, and required license text without external runtime dependencies.
+
+GitHub Pages: https://zephyrfbd.github.io/star-color-local-web/
+
 ## Linux deployment
 
 The server only needs Docker and a host Nginx reverse proxy. A 2-core, 2 GB server is sufficient because user images are never uploaded; the provided container is limited to 96 MB RAM and 0.25 CPU.
+
+The hosted container serves the Vite multi-file build from `dist/`. Its small HTML, CSS, and JavaScript files load independently and can be cached; the RAW decoder and WebAssembly are requested only when RAW processing needs them. The single-file build is intended for offline distribution, not as the hosted homepage.
 
 ```bash
 unzip star-color-browser-web.zip
