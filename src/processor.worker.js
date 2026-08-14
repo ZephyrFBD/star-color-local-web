@@ -8,9 +8,12 @@ let colors;
 let bits;
 let sourceKind;
 let srgbTable;
+let locale = "en";
 
 const sendProgress = (value, stage, detail = "") => postMessage({ type: "progress", value, stage, detail });
 const pause = () => new Promise((resolve) => setTimeout(resolve, 0));
+const tr = (english, chinese) => locale === "zh" ? chinese : english;
+const localizedNumber = (value) => value.toLocaleString(locale === "zh" ? "zh-CN" : "en-US");
 
 function sourceValue(pixel, channel) {
   if (sourceKind === "rgba8") return srgbTable[source[pixel * 4 + channel]];
@@ -19,7 +22,7 @@ function sourceValue(pixel, channel) {
   const r = source[offset] * scale;
   const g = source[offset + Math.min(1, colors - 1)] * scale;
   const b = source[offset + Math.min(2, colors - 1)] * scale;
-  // RAW 运行时输出线性 ProPhoto RGB；转换到第一版所用的线性 sRGB 工作空间。
+  // The RAW runtime returns linear ProPhoto RGB; convert it to the linear sRGB workspace used by the original processor.
   const value = channel === 0
     ? 1.3459433 * r - 0.2556075 * g - 0.0511118 * b
     : channel === 1
@@ -36,7 +39,7 @@ async function buildPlane(channel, progressStart, progressEnd) {
     const row = y * width;
     for (let x = 0; x < width; x++) plane[row + x] = sourceValue(row + x, channel);
     if (y % stride === 0) {
-      sendProgress(progressStart + (progressEnd - progressStart) * y / height, "准备线性色彩", `读取第 ${channel + 1} 个色彩通道`);
+      sendProgress(progressStart + (progressEnd - progressStart) * y / height, tr("Prepare linear color", "准备线性色彩"), tr(`Read color channel ${channel + 1}`, `读取第 ${channel + 1} 个色彩通道`));
       await pause();
     }
   }
@@ -69,7 +72,7 @@ async function exactGaussianCpu(input, w, h, sigma, label) {
       temp[row + x] = sum;
     }
     if ((y & 63) === 0) {
-      postMessage({ type: "pulse", detail: `${label} · CPU 横向 ${Math.round(y / h * 100)}%` });
+      postMessage({ type: "pulse", detail: `${label} · ${tr("CPU horizontal", "CPU 横向")} ${Math.round(y / h * 100)}%` });
       await pause();
     }
   }
@@ -81,7 +84,7 @@ async function exactGaussianCpu(input, w, h, sigma, label) {
       output[row + x] = sum;
     }
     if ((y & 63) === 0) {
-      postMessage({ type: "pulse", detail: `${label} · CPU 纵向 ${Math.round(y / h * 100)}%` });
+      postMessage({ type: "pulse", detail: `${label} · ${tr("CPU vertical", "CPU 纵向")} ${Math.round(y / h * 100)}%` });
       await pause();
     }
   }
@@ -146,7 +149,7 @@ async function fastGaussianCpu(input, w, h, sigma, label) {
     boxVertical(temp, output, w, h, Math.min(radius, Math.max(1, h - 1)));
     current = output;
     if (pass < sizes.length - 1) output = new Float32Array(input.length);
-    postMessage({ type: "pulse", detail: `${label} · CPU 快速高斯 ${pass + 1}/3` });
+    postMessage({ type: "pulse", detail: `${label} · ${tr("CPU fast Gaussian", "CPU 快速高斯")} ${pass + 1}/3` });
     await pause();
   }
   return current;
@@ -160,7 +163,7 @@ async function blur(input, w, h, sigma, label) {
     } catch (error) {
       gpu.destroy();
       gpu = null;
-      postMessage({ type: "engine", engine: "cpu", warning: `WebGPU 计算失败，已自动回退 CPU：${error.message}` });
+      postMessage({ type: "engine", engine: "cpu", warning: tr(`WebGPU computation failed; automatically fell back to CPU: ${error.message}`, `WebGPU 计算失败，已自动回退 CPU：${error.message}`) });
     }
   }
   return sigma > 4 ? fastGaussianCpu(input, w, h, sigma, label) : exactGaussianCpu(input, w, h, sigma, label);
@@ -249,7 +252,7 @@ async function coarseLandscape(options) {
       const sy = Math.min(height - 1, y * scale);
       for (let x = 0; x < coarseW; x++) plane[y * coarseW + x] = sourceValue(sy * width + Math.min(width - 1, x * scale), c);
     }
-    planes.push(options.landscapeBlur > 0 ? await exactGaussianCpu(plane, coarseW, coarseH, options.landscapeBlur, "地景分析") : plane);
+    planes.push(options.landscapeBlur > 0 ? await exactGaussianCpu(plane, coarseW, coarseH, options.landscapeBlur, tr("Landscape analysis", "地景分析")) : plane);
   }
   return { planes, width: coarseW, height: coarseH, scale };
 }
@@ -414,8 +417,10 @@ async function encodeResult(mask, backgrounds, options, debug = false) {
 }
 
 self.onmessage = async ({ data: message }) => {
+  if (message.type === "locale") { locale = message.locale === "zh" ? "zh" : "en"; return; }
   if (message.type !== "process") return;
   try {
+    locale = message.locale === "zh" ? "zh" : "en";
     width = message.width;
     height = message.height;
     colors = message.colors;
@@ -433,15 +438,15 @@ self.onmessage = async ({ data: message }) => {
 
     if (options.preferGpu) {
       try {
-        gpu = await WebGpuGaussian.create(width, height);
+        gpu = await WebGpuGaussian.create(width, height, locale);
         postMessage({ type: "engine", engine: "webgpu" });
       } catch (error) {
-        postMessage({ type: "engine", engine: "cpu", warning: `WebGPU 不可用，已使用 CPU Worker：${error.message}` });
+        postMessage({ type: "engine", engine: "cpu", warning: tr(`WebGPU unavailable; using CPU Worker: ${error.message}`, `WebGPU 不可用，已使用 CPU Worker：${error.message}`) });
       }
     } else postMessage({ type: "engine", engine: "cpu" });
 
     const megapixels = width * height / 1_000_000;
-    sendProgress(24, "准备线性色彩", `${width} × ${height} · ${megapixels.toFixed(1)} MP`);
+    sendProgress(24, tr("Prepare linear color", "准备线性色彩"), `${width} × ${height} · ${megapixels.toFixed(1)} MP`);
     const luminance = new Float32Array(width * height);
     for (let c = 0; c < 3; c++) {
       const plane = await buildPlane(c, 24 + c * 2, 26 + c * 2);
@@ -449,41 +454,41 @@ self.onmessage = async ({ data: message }) => {
       for (let i = 0; i < luminance.length; i++) luminance[i] += plane[i] * weight;
     }
 
-    sendProgress(31, "检测星点响应", "分离星核与大尺度光污染");
-    const core = await blur(luminance, width, height, options.coreSigma, "星核尺度");
-    sendProgress(39, "检测星点响应", "计算周边尺度");
-    const surround = await blur(luminance, width, height, options.surroundSigma, "周边尺度");
+    sendProgress(31, tr("Detect star response", "检测星点响应"), tr("Separate star cores from large-scale light pollution", "分离星核与大尺度光污染"));
+    const core = await blur(luminance, width, height, options.coreSigma, tr("Star core scale", "星核尺度"));
+    sendProgress(39, tr("Detect star response", "检测星点响应"), tr("Calculate the surround scale", "计算周边尺度"));
+    const surround = await blur(luminance, width, height, options.surroundSigma, tr("Surround scale", "周边尺度"));
     for (let i = 0; i < core.length; i++) core[i] -= surround[i];
 
-    sendProgress(48, "估计噪声", "计算稳健中位数与 MAD");
+    sendProgress(48, tr("Estimate noise", "估计噪声"), tr("Calculate robust median and MAD", "计算稳健中位数与 MAD"));
     const stats = await robustNoise(core);
     const detectionThreshold = stats.center + options.threshold * stats.noise;
     let responseMax = -Infinity;
     for (let i = 0; i < core.length; i++) if (core[i] > responseMax) responseMax = core[i];
-    sendProgress(52, "识别星点", `噪声 ${stats.noise.toExponential(2)} · 阈值 ${detectionThreshold.toExponential(2)} · 峰值 ${responseMax.toExponential(2)}`);
+    sendProgress(52, tr("Identify stars", "识别星点"), tr(`Noise ${stats.noise.toExponential(2)} · threshold ${detectionThreshold.toExponential(2)} · peak ${responseMax.toExponential(2)}`, `噪声 ${stats.noise.toExponential(2)} · 阈值 ${detectionThreshold.toExponential(2)} · 峰值 ${responseMax.toExponential(2)}`));
     const candidates = await findCandidates(core, detectionThreshold, options);
 
-    sendProgress(58, "分析天空与地景", `形状候选 ${candidates.length} 个`);
+    sendProgress(58, tr("Analyze sky and landscape", "分析天空与地景"), tr(`${localizedNumber(candidates.length)} shape candidates`, `形状候选 ${localizedNumber(candidates.length)} 个`));
     const landscape = await coarseLandscape(options);
     const backgrounds = [];
     for (let c = 0; c < 3; c++) {
       const from = 60 + c * 7;
       const plane = await buildPlane(c, from, from + 2);
-      sendProgress(from + 2, "去除光污染背景", `色彩通道 ${c + 1}/3`);
-      backgrounds.push(await blur(plane, width, height, options.backgroundSigma, `背景通道 ${c + 1}/3`));
+      sendProgress(from + 2, tr("Remove light-pollution background", "去除光污染背景"), tr(`Color channel ${c + 1}/3`, `色彩通道 ${c + 1}/3`));
+      backgrounds.push(await blur(plane, width, height, options.backgroundSigma, tr(`Background channel ${c + 1}/3`, `背景通道 ${c + 1}/3`)));
     }
 
-    sendProgress(82, "筛选真实星点", "检查颜色、面积与地景位置");
+    sendProgress(82, tr("Filter real stars", "筛选真实星点"), tr("Check color, area, and landscape position", "检查颜色、面积与地景位置"));
     const accepted = acceptCandidates(candidates, backgrounds, landscape, options);
     const footprint = makeFootprint(accepted, core, {
       radius: options.radius,
       value: stats.center + options.haloFloor * stats.noise,
     });
 
-    sendProgress(91, options.background === "preserve" ? "插值无星背景并叠回强化星光" : "生成彩色 PNG", `保留 ${accepted.length} 颗星 · ${footprint.pixels.toLocaleString()} 个像素`);
+    sendProgress(91, options.background === "preserve" ? tr("Interpolate a starless background and add enhanced stars", "插值无星背景并叠回强化星光") : tr("Generate color PNG", "生成彩色 PNG"), tr(`Retained ${localizedNumber(accepted.length)} stars · ${localizedNumber(footprint.pixels)} pixels`, `保留 ${localizedNumber(accepted.length)} 颗星 · ${localizedNumber(footprint.pixels)} 个像素`));
     const encoded = await encodeResult(footprint.mask, backgrounds, options, message.debug);
     const blob = encoded.blob;
-    sendProgress(100, "处理完成", `${accepted.length} 颗星 · ${(blob.size / 1024 / 1024).toFixed(1)} MB PNG`);
+    sendProgress(100, tr("Processing complete", "处理完成"), tr(`${localizedNumber(accepted.length)} stars · ${(blob.size / 1024 / 1024).toFixed(1)} MB PNG`, `${localizedNumber(accepted.length)} 颗星 · ${(blob.size / 1024 / 1024).toFixed(1)} MB PNG`));
     gpu?.destroy();
     gpu = null;
     const result = { type: "result", blob, width, height, stars: accepted.length, pixels: footprint.pixels };

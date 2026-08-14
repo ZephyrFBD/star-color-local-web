@@ -16,6 +16,8 @@ button { color: inherit; }
 .aurora-a { left: -16rem; top: 9rem; background: #237bff; }
 .aurora-b { display: none; }
 .shell { position: relative; width: min(1180px, calc(100% - 40px)); margin: 0 auto; padding: 70px 0 88px; }
+.language-toggle { position: absolute; top: 24px; right: 0; min-width: 76px; padding: 8px 13px; border: 1px solid #2b3746; border-radius: 999px; color: #b9c4d4; background: #0d1219dd; cursor: pointer; transition: .2s ease; }
+.language-toggle:hover { color: #eef4ff; border-color: #668bd2; background: #121b28; }
 .hero { max-width: 790px; margin-bottom: 42px; }
 .brand { color: #aeb8c7; font-size: .72rem; letter-spacing: .2em; font-weight: 750; }
 .brand-star { color: #84aefe; margin-right: 8px; }
@@ -111,4 +113,5 @@ h2 { margin: 6px 0 0; font-size: 1.5rem; }
   .advanced-grid { grid-template-columns: 1fr; }
   .preview-stage { min-height: 320px; }
   h1 { font-size: 2.6rem; }
+  .language-toggle { top: 12px; right: 4px; }
 }

@@ -1,23 +1,24 @@
 <!doctype html>
-<html lang="zh-CN">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="theme-color" content="#07090d" />
-    <meta name="description" content="照片完全在浏览器本地处理的彩色星点提取器" />
-    <title>本地彩色星点提取器</title>
+    <meta name="description" content="A color star extractor that processes photos entirely in your browser" />
+    <title>Local Color Star Extractor</title>
     <link rel="stylesheet" href="/src/styles.css" />
   </head>
   <body>
     <div class="aurora aurora-a"></div><div class="aurora aurora-b"></div>
     <main class="shell">
+      <button id="languageToggle" class="language-toggle" type="button" aria-label="Switch to Chinese">中文</button>
       <header class="hero">
         <div class="brand"><span class="brand-star">✦</span> LOCAL STAR EXTRACTOR</div>
-        <h1>留下星光，<br /><em>照片不离开你的电脑。</em></h1>
-        <p>RAW 解码、星点检测与 PNG 生成全部在浏览器本地完成。保留每颗星的原始颜色和明暗层次，服务器只提供网页文件。</p>
+        <h1><span data-i18n="hero.title">Keep the stars.</span><br /><em data-i18n="hero.subtitle">Your photos stay on your device.</em></h1>
+        <p data-i18n="hero.description">RAW decoding, star detection, and PNG generation all run locally in your browser. Original star colors and relative brightness are preserved; the server only delivers static files.</p>
         <div class="badges">
-          <span class="privacy-badge">🔒 零上传 · 本地处理</span>
-          <span id="engineBadge" class="engine-badge">正在检测 WebGPU…</span>
+          <span class="privacy-badge" data-i18n="badge.privacy">🔒 Zero upload · Local processing</span>
+          <span id="engineBadge" class="engine-badge" data-i18n="engine.detecting">Detecting WebGPU…</span>
         </div>
       </header>
 
@@ -25,54 +26,54 @@
         <div class="upload-panel">
           <label id="dropZone" class="drop-zone" for="fileInput">
             <input id="fileInput" type="file" accept=".dng,.nef,.nrw,.cr2,.cr3,.arw,.raf,.rw2,.orf,.pef,.raw,.jpg,.jpeg,.png,.webp" />
-            <span class="upload-icon">↥</span><strong>把照片拖到这里</strong>
-            <span>或点击选择本地文件</span>
-            <small>DNG / 常见相机 RAW / JPG / PNG / WebP</small>
+            <span class="upload-icon">↥</span><strong data-i18n="upload.drop">Drop a photo here</strong>
+            <span data-i18n="upload.choose">or click to choose a local file</span>
+            <small data-i18n="upload.formats">DNG / common camera RAW / JPG / PNG / WebP</small>
           </label>
 
           <div id="fileCard" class="file-card hidden">
             <div class="file-mark">RAW</div>
             <div class="file-copy"><strong id="fileName"></strong><span id="fileSize"></span></div>
-            <button id="removeFile" class="icon-button" aria-label="移除文件">×</button>
+            <button id="removeFile" class="icon-button" aria-label="Remove file" data-i18n-aria="file.remove">×</button>
           </div>
 
           <div class="controls">
-            <div class="control"><div class="control-head"><label for="threshold">检测严格度</label><output id="thresholdValue">8.0</output></div><input id="threshold" type="range" min="4" max="14" step="0.5" value="8" /><small>越高越少误检，暗星也可能减少</small></div>
-            <div class="control"><div class="control-head"><label for="radius">星点外扩</label><output id="radiusValue">3 px</output></div><input id="radius" type="range" min="0" max="6" step="1" value="3" /><small>保留星点周围的颜色与光晕</small></div>
-            <div class="control"><div class="control-head"><label for="gain">统一亮度倍率</label><output id="gainValue">5.00×</output></div><input id="gain" type="range" min="0.25" max="10" step="0.05" value="5" /><small>不会对单颗星或单张照片自动归一化</small></div>
-            <fieldset class="background-choice"><legend>导出背景</legend><label><input type="radio" name="background" value="black" /><span>黑色</span></label><label><input type="radio" name="background" value="transparent" /><span>透明</span></label><label><input type="radio" name="background" value="preserve" checked /><span>保留背景</span></label></fieldset>
-            <p class="background-hint">“保留背景”会先移除星点并从周围像素插值得到无星背景，再叠回增强后的彩色星光。</p>
-            <label class="switch-row"><span><strong>排除暖色地景</strong><small>减少树木、建筑灯光被识别为星点</small></span><input id="landscapeFilter" type="checkbox" checked /><i></i></label>
-            <label class="switch-row"><span><strong>优先使用 WebGPU</strong><small>不可用或失败时自动回退 CPU Worker</small></span><input id="preferGpu" type="checkbox" checked /><i></i></label>
+            <div class="control"><div class="control-head"><label for="threshold" data-i18n="control.threshold">Detection strictness</label><output id="thresholdValue">8.0</output></div><input id="threshold" type="range" min="4" max="14" step="0.5" value="8" /><small data-i18n="control.thresholdHint">Higher values reduce false positives but may miss faint stars</small></div>
+            <div class="control"><div class="control-head"><label for="radius" data-i18n="control.radius">Star expansion</label><output id="radiusValue">3 px</output></div><input id="radius" type="range" min="0" max="6" step="1" value="3" /><small data-i18n="control.radiusHint">Keep color and glow around each detected star</small></div>
+            <div class="control"><div class="control-head"><label for="gain" data-i18n="control.gain">Uniform brightness gain</label><output id="gainValue">5.00×</output></div><input id="gain" type="range" min="0.25" max="10" step="0.05" value="5" /><small data-i18n="control.gainHint">Does not normalize individual stars or images</small></div>
+            <fieldset class="background-choice"><legend data-i18n="background.legend">Export background</legend><label><input type="radio" name="background" value="black" /><span data-i18n="background.black">Black</span></label><label><input type="radio" name="background" value="transparent" /><span data-i18n="background.transparent">Transparent</span></label><label><input type="radio" name="background" value="preserve" checked /><span data-i18n="background.preserve">Preserve background</span></label></fieldset>
+            <p class="background-hint" data-i18n="background.hint">Preserve background removes detected stars, interpolates a starless background from nearby pixels, then adds the enhanced color stars back.</p>
+            <label class="switch-row"><span><strong data-i18n="landscape.title">Exclude warm landscapes</strong><small data-i18n="landscape.hint">Reduce trees and building lights detected as stars</small></span><input id="landscapeFilter" type="checkbox" checked /><i></i></label>
+            <label class="switch-row"><span><strong data-i18n="gpu.title">Prefer WebGPU</strong><small data-i18n="gpu.hint">Automatically fall back to a CPU Worker when unavailable or unsuccessful</small></span><input id="preferGpu" type="checkbox" checked /><i></i></label>
 
             <details class="advanced-settings">
-              <summary><span>高级检测参数</span><small>全部参数均有默认值</small></summary>
+              <summary><span data-i18n="advanced.title">Advanced detection settings</span><small data-i18n="advanced.hint">Every option has a default value</small></summary>
               <div class="advanced-body"><div class="advanced-grid">
-                <label class="number-control"><span>星核尺度 <small>0.25–2</small></span><input id="coreSigma" type="number" min="0.25" max="2" step="0.05" value="0.65" /></label>
-                <label class="number-control"><span>周边尺度 <small>1–10</small></span><input id="surroundSigma" type="number" min="1" max="10" step="0.25" value="3" /></label>
-                <label class="number-control"><span>背景尺度 <small>4–40</small></span><input id="backgroundSigma" type="number" min="4" max="40" step="1" value="12" /></label>
-                <label class="number-control"><span>最小星点面积 <small>px²</small></span><input id="minArea" type="number" min="1" max="20" step="1" value="1" /></label>
-                <label class="number-control"><span>最大星点面积 <small>px²</small></span><input id="maxArea" type="number" min="1" max="400" step="1" value="60" /></label>
-                <label class="number-control"><span>最大星点边长 <small>px</small></span><input id="maxSize" type="number" min="3" max="60" step="1" value="14" /></label>
-                <label class="number-control"><span>单色尖峰上限 <small>0.34–1</small></span><input id="chromaLimit" type="number" min="0.34" max="1" step="0.01" value="0.72" /></label>
-                <label class="number-control"><span>光晕保留阈值 <small>-1–3</small></span><input id="haloFloor" type="number" min="-1" max="3" step="0.05" value="0.20" /></label>
-                <label class="number-control"><span>天空冷色比例 <small>0.5–1.2</small></span><input id="skyRatio" type="number" min="0.5" max="1.2" step="0.01" value="0.90" /></label>
-                <label class="number-control"><span>地景采样间隔 <small>px</small></span><input id="landscapeScale" type="number" min="4" max="64" step="1" value="16" /></label>
-                <label class="number-control"><span>地景平滑尺度 <small>0–12</small></span><input id="landscapeBlur" type="number" min="0" max="12" step="0.25" value="4" /></label>
-              </div><button id="resetDefaults" class="reset-button" type="button">恢复全部默认值</button></div>
+                <label class="number-control"><span><span data-i18n="advanced.core">Star core scale</span> <small>0.25–2</small></span><input id="coreSigma" type="number" min="0.25" max="2" step="0.05" value="0.65" /></label>
+                <label class="number-control"><span><span data-i18n="advanced.surround">Surround scale</span> <small>1–10</small></span><input id="surroundSigma" type="number" min="1" max="10" step="0.25" value="3" /></label>
+                <label class="number-control"><span><span data-i18n="advanced.background">Background scale</span> <small>4–40</small></span><input id="backgroundSigma" type="number" min="4" max="40" step="1" value="12" /></label>
+                <label class="number-control"><span><span data-i18n="advanced.minArea">Minimum star area</span> <small>px²</small></span><input id="minArea" type="number" min="1" max="20" step="1" value="1" /></label>
+                <label class="number-control"><span><span data-i18n="advanced.maxArea">Maximum star area</span> <small>px²</small></span><input id="maxArea" type="number" min="1" max="400" step="1" value="60" /></label>
+                <label class="number-control"><span><span data-i18n="advanced.maxSize">Maximum star size</span> <small>px</small></span><input id="maxSize" type="number" min="3" max="60" step="1" value="14" /></label>
+                <label class="number-control"><span><span data-i18n="advanced.chroma">Monochrome spike limit</span> <small>0.34–1</small></span><input id="chromaLimit" type="number" min="0.34" max="1" step="0.01" value="0.72" /></label>
+                <label class="number-control"><span><span data-i18n="advanced.halo">Halo retention floor</span> <small>-1–3</small></span><input id="haloFloor" type="number" min="-1" max="3" step="0.05" value="0.20" /></label>
+                <label class="number-control"><span><span data-i18n="advanced.sky">Cool-sky ratio</span> <small>0.5–1.2</small></span><input id="skyRatio" type="number" min="0.5" max="1.2" step="0.01" value="0.90" /></label>
+                <label class="number-control"><span><span data-i18n="advanced.landscapeScale">Landscape sample spacing</span> <small>px</small></span><input id="landscapeScale" type="number" min="4" max="64" step="1" value="16" /></label>
+                <label class="number-control"><span><span data-i18n="advanced.landscapeBlur">Landscape smoothing scale</span> <small>0–12</small></span><input id="landscapeBlur" type="number" min="0" max="12" step="0.25" value="4" /></label>
+              </div><button id="resetDefaults" class="reset-button" type="button" data-i18n="advanced.reset">Restore all defaults</button></div>
             </details>
           </div>
 
-          <button id="extractButton" class="primary-button" disabled><span id="buttonLabel">在本机提取彩色星点</span><span class="button-arrow">→</span></button>
-          <div id="progressBox" class="progress-box hidden"><div class="progress-copy"><span id="progressStage">读取文件</span><strong id="progressValue">0%</strong></div><div class="progress-track"><i id="progressBar"></i></div><small id="progressDetail">尚未开始</small></div>
+          <button id="extractButton" class="primary-button" disabled><span id="buttonLabel" data-i18n="action.extract">Extract color stars locally</span><span class="button-arrow">→</span></button>
+          <div id="progressBox" class="progress-box hidden"><div class="progress-copy"><span id="progressStage" data-i18n="progress.readFile">Read file</span><strong id="progressValue">0%</strong></div><div class="progress-track"><i id="progressBar"></i></div><small id="progressDetail" data-i18n="progress.notStarted">Not started</small></div>
           <div id="status" class="status" aria-live="polite"></div>
         </div>
 
         <div class="preview-panel">
-          <div class="preview-head"><div><span class="eyebrow">LOCAL OUTPUT</span><h2>彩色星点</h2></div><span id="resultMeta" class="result-meta">等待处理</span></div>
-          <div class="preview-stage"><div id="emptyPreview" class="empty-preview"><span>✦</span><p>本地处理结果将在这里显示</p></div><img id="resultImage" class="hidden" alt="彩色星点提取结果" /><div id="processing" class="processing hidden"><span class="spinner"></span><p>正在本机分析星光…</p></div></div>
-          <button id="downloadButton" class="download-button" disabled>下载彩色 PNG <span>↓</span></button>
-          <p class="privacy">照片内容不会通过网络发送。关闭或刷新页面后，本次处理数据即从页面内存中释放。</p>
+          <div class="preview-head"><div><span class="eyebrow">LOCAL OUTPUT</span><h2 data-i18n="preview.title">Color stars</h2></div><span id="resultMeta" class="result-meta" data-i18n="preview.waiting">Waiting</span></div>
+          <div class="preview-stage"><div id="emptyPreview" class="empty-preview"><span>✦</span><p data-i18n="preview.empty">Your local result will appear here</p></div><img id="resultImage" class="hidden" alt="Extracted color stars" data-i18n-alt="preview.alt" /><div id="processing" class="processing hidden"><span class="spinner"></span><p data-i18n="preview.processing">Analyzing starlight locally…</p></div></div>
+          <button id="downloadButton" class="download-button" disabled><span data-i18n="action.download">Download color PNG</span> <span>↓</span></button>
+          <p class="privacy" data-i18n="privacy.footer">Photo data is never sent over the network. Closing or refreshing this tab releases the temporary processing data.</p>
         </div>
       </section>
     </main>

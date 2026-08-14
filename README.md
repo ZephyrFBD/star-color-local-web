@@ -1,24 +1,34 @@
-# 浏览器本地彩色星点提取器
+# Local Color Star Extractor
 
-照片不会上传。RAW 解码、星点检测、背景光污染分离和 PNG 生成全部在访问者自己的浏览器内完成；Linux 服务器只发送静态网页文件。默认部署地址为 `https://你的域名/star-color/`。
+A privacy-first, browser-only tool for extracting and enhancing colored stars. RAW decoding, star detection, light-pollution separation, background reconstruction, and PNG generation all run on the visitor's device. The server only delivers static files.
 
-## 功能
+The interface defaults to English and can be switched to Chinese at any time.
 
-- 支持 DNG、NEF、CR2、CR3、ARW、RAF、RW2、ORF、PEF，以及 JPG、PNG、WebP。
-- RAW 使用相机白平衡、16 位线性、全分辨率解码，不使用嵌入式预览，也不自动降采样。
-- 保留星星原本的颜色与相对明暗，不把暗星和亮星归一化成同样亮度。
-- 可调整检测严格度、外扩圈数、亮度倍率、背景、星核/周边/背景尺度、面积、边长、色度和地景过滤参数；所有参数都有默认值。
-- 背景支持黑色、透明和“保留背景”。保留背景模式先移除检测到的星点，以多个方向的非星边界像素做局部插值，再把按统一倍率增强的线性星光叠回去。
-- 优先尝试 WebGPU，并先做正确性自检；不可用、自检失败、显存不足或执行失败时自动切到 CPU Worker。
-- 有分阶段进度、预览和 PNG 下载。
+## Features
 
-## 单 HTML 版本
+- Supports DNG, NEF, NRW, CR2, CR3, ARW, RAF, RW2, ORF, PEF, common RAW files, JPG, PNG, and WebP.
+- Decodes supported RAW files at full resolution with 16-bit linear data and camera white balance. It does not use embedded previews or silently downsample images.
+- Preserves each star's original color and relative brightness instead of normalizing faint and bright stars to the same level.
+- Provides adjustable detection strictness, expansion radius, brightness gain, background mode, Gaussian scales, area and size limits, chroma filtering, halo retention, and landscape filtering. Every option has a default value.
+- Offers black, transparent, and preserved-background output. Preserve-background mode removes detected stars, reconstructs a starless background from nearby non-star pixels, and adds the uniformly enhanced linear starlight back.
+- Tries WebGPU after a correctness self-test and automatically falls back to a CPU Worker if WebGPU is unavailable or fails.
+- Shows staged progress, a preview, and a downloadable PNG.
 
-运行 `npm run build:single`，输出文件为 `single/star-color-local.html`。该文件会内嵌界面、处理 Worker、RAW 解码 Worker、WebAssembly 运行时和第三方许可证文本；`single/` 属于构建产物，不提交到 GitHub。
+## Single-file build
 
-## Linux 服务器部署
+Run:
 
-服务器只需 Docker 和宿主机 Nginx。2 核 2 GB 足够，因为图片不进入服务器，容器限制为 96 MB 内存和 0.25 CPU。
+```bash
+npm run build:single
+```
+
+The output is `single/star-color-local.html`. It embeds the interface, processing Worker, RAW runtime Worker, native WebAssembly assets, and required third-party license text. The generated `single/` directory is intentionally excluded from Git.
+
+The single HTML can be opened directly with `file://`. In that mode it uses a main-thread compatibility wrapper because browsers do not allow module Workers to load from local files. RAW decoding and image processing remain fully local.
+
+## Linux deployment
+
+The server only needs Docker and a host Nginx reverse proxy. A 2-core, 2 GB server is sufficient because user images are never uploaded; the provided container is limited to 96 MB RAM and 0.25 CPU.
 
 ```bash
 unzip star-color-browser-web.zip
@@ -27,26 +37,26 @@ docker compose up -d --build
 curl http://127.0.0.1:8080/health
 ```
 
-把 `deploy/domain-nginx.conf` 中的两个 `location` 块加入现有域名的 HTTPS `server {}` 中，然后：
+Add the two `location` blocks from `deploy/domain-nginx.conf` to the existing HTTPS `server {}` block, then validate and reload Nginx:
 
 ```bash
 sudo nginx -t
 sudo systemctl reload nginx
 ```
 
-访问地址为 `https://你的域名/star-color/`。公网域名必须使用 HTTPS 才能启用 WebGPU。若该域名尚未配置 HTTPS，可使用 Certbot：
+The default subpath is `https://your-domain.example/star-color/`. A public deployment requires HTTPS for WebGPU. If needed, configure a certificate with Certbot:
 
 ```bash
-sudo certbot --nginx -d 你的域名
+sudo certbot --nginx -d your-domain.example
 ```
 
-不要删除 Nginx 配置里的 COOP、COEP 和 CORP 响应头；浏览器 RAW 并行解码需要这些头。检查：
+Keep the COOP, COEP, and CORP response headers in the Nginx configuration. Parallel browser-side RAW decoding requires cross-origin isolation. Verify the deployment with:
 
 ```bash
-curl -I https://你的域名/star-color/
+curl -I https://your-domain.example/star-color/
 ```
 
-响应中应包含：
+The response should include:
 
 ```text
 Cross-Origin-Opener-Policy: same-origin
@@ -54,41 +64,41 @@ Cross-Origin-Embedder-Policy: require-corp
 Cross-Origin-Resource-Policy: same-origin
 ```
 
-## 本地开发
+## Local development
 
-需要 Node.js 22：
+Node.js 22 is recommended:
 
 ```bash
 npm ci
 npm run dev
 ```
 
-生产构建：
+Create a production build with:
 
 ```bash
 npm run build
 ```
 
-静态文件会输出到 `dist/`。`npm run build` 会把 RAW WebAssembly 运行时及其许可证自动复制进去，因此生产环境不依赖 CDN。
+Static files are written to `dist/`. The build copies the RAW WebAssembly runtime and its licenses into the output, so production does not depend on a CDN.
 
-## 性能和内存
+## Performance and memory
 
-- WebGPU 高斯计算按带重叠光晕的分块执行，保持全分辨率，同时控制单次显存占用。
-- CPU 回退运行在独立 Worker，不会锁死网页界面。
-- 一张 4000×2250 的 16 位 RAW，在客户端浏览器中通常需要数百 MB 临时内存；这与服务器的 2 GB 内存无关。
-- 页面会显示估算内存，并在预计超过浏览器安全上限时停止，不会偷偷降低分辨率。
-- 浏览器不能把临时像素数组映射到服务器硬盘，因为文件从未上传；内存不足时会明确报错，而不是让服务器崩溃。
+- WebGPU Gaussian processing uses overlapping tiles to preserve full resolution while controlling individual buffer sizes.
+- CPU fallback runs in a dedicated Worker for hosted builds.
+- A 4000×2250 16-bit RAW file can require several hundred megabytes of temporary client-side memory. This is unrelated to server memory.
+- The page estimates peak memory and stops before the browser safety limit. It never silently lowers the resolution.
+- Browser pixel buffers cannot spill into server storage because images never leave the device. If client memory is insufficient, the page reports an error instead of affecting the server.
 
-桌面版最新版 Chrome 或 Edge 的兼容性最好。WebGPU 不可用时仍能处理，只是 CPU 模式会更慢。
+Current desktop Chrome and Edge provide the best compatibility. Processing still works without WebGPU, but CPU mode is slower.
 
-## 隐私说明
+## Privacy
 
-网页没有上传接口，处理流程也不发送图片请求。服务端访问日志只能看到网页、脚本和 WASM 静态资源请求，看不到用户选择的照片内容。
+The application has no upload endpoint, and the processing path does not send image data over the network. Server access logs can contain requests for the HTML, JavaScript, and WASM assets, but not the photos selected by users.
 
-## 开源组件
+## Open-source components
 
-RAW 解码使用 `@lumaforge/luma-raw-runtime`（LibRaw 0.22.1）。构建产物中的 `dist/luma/LICENSE`、`THIRD_PARTY_NOTICES.md` 和 `THIRD_PARTY_LICENSES/` 必须随站点一起发布。
+RAW decoding uses `@lumaforge/luma-raw-runtime` with LibRaw 0.22.1. Production builds must include `dist/luma/LICENSE`, `dist/luma/THIRD_PARTY_NOTICES.md`, and `dist/luma/THIRD_PARTY_LICENSES/`.
 
-## 作者
+## Author
 
 ZephyrFBD

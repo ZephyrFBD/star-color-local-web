@@ -51,7 +51,6 @@ main = main.replace(
   'new Worker(new URL("./processor.worker.js", import.meta.url), { type: "module" })',
   'globalThis.__singleProcessorWorkerFactory()',
 );
-main = main.replace('elements.engine.textContent = "CPU Worker 模式"', 'elements.engine.textContent = globalThis.__singleInlineMode ? "本地主线程兼容模式" : "CPU Worker 模式"');
 if (main.includes("import.meta.env") || main.includes("processor.worker.js")) throw new Error("Could not patch application asset URLs");
 
 const bootstrap = `
@@ -62,7 +61,7 @@ globalThis.__singleProcessorWorkerUrl=__moduleUrl(${jsString(processorWorker)});
 globalThis.__singleProcessorWorkerFactory=()=>__singleInlineMode?__inlineWorker(${jsString(processorWorker)},"star-color-processor.inline.js"):new Worker(__singleProcessorWorkerUrl,{type:"module"});
 const __rawWorkerUrl=__moduleUrl(${jsString(runtimeWorker)});
 const __embeddedNativeAssets=${JSON.stringify(embeddedAssets)};
-globalThis.__LUMA_INLINE_NATIVE_FACTORY__=__singleInlineMode?(profile)=>{let nativeSource=atob(__embeddedNativeAssets[profile].js);nativeSource=nativeSource.replaceAll("import.meta.url","globalThis.__LUMA_NATIVE_JS_URL__").replace(/export\\s*\\{\\s*Module\\s+as\\s+default\\s*\\}\\s*;?/,"");return new Function(nativeSource+"\\nreturn Module")()}:null;
+globalThis.__LUMA_INLINE_NATIVE_FACTORY__=__singleInlineMode?(profile)=>{let nativeSource=atob(__embeddedNativeAssets[profile].js);nativeSource=nativeSource.replaceAll("import.meta.url","globalThis.__LUMA_NATIVE_JS_URL__").replace(/export\\s+default\\s+Module\\s*;?/,"").replace(/export\\s*\\{\\s*Module\\s+as\\s+default\\s*\\}\\s*;?/,"");if(/\\bexport\\s/.test(nativeSource))throw new Error("Unsupported embedded Luma RAW module export syntax");return new Function(nativeSource+"\\nreturn Module")()}:null;
 globalThis.__singleRawWorkerFactory=()=>__singleInlineMode?__inlineWorker(${jsString(runtimeWorker)},"luma-raw-runtime.inline.js"):new Worker(__rawWorkerUrl,{type:"module"});
 const __rawRuntimeUrl=__moduleUrl(${jsString(distText("luma/index.js"))});
 globalThis.__singleRawRuntime=await import(__rawRuntimeUrl);
@@ -81,7 +80,7 @@ let html = text("index.html");
 html = html.replace(/\s*<link rel="stylesheet" href="\/src\/styles\.css"\s*\/?>/, `\n<style>\n${text("src/styles.css")}\n</style>`);
 html = html.replace(/\s*<script type="module" src="\/src\/main\.js"><\/script>/, "");
 html = html.replace("</body>", `<script type="module">\n${bootstrap.replaceAll("</script", "<\\/script")}\n</script>\n<script id="open-source-licenses" type="text/plain">${licenses.replaceAll("</script", "<\\/script")}</script>\n</body>`);
-html = html.replace("<title>", '<meta name="star-color-build" content="single-file-v2.1.8" />\n    <title>');
+html = html.replace("<title>", '<meta name="star-color-build" content="single-file-v2.1.9" />\n    <title>');
 mkdirSync(dirname(output), { recursive: true });
 writeFileSync(output, html);
 console.log(`${output}\n${Buffer.byteLength(html)} bytes`);
