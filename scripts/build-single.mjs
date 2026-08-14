@@ -80,7 +80,7 @@ let html = text("index.html");
 html = html.replace(/\s*<link rel="stylesheet" href="\/src\/styles\.css"\s*\/?>/, `\n<style>\n${text("src/styles.css")}\n</style>`);
 html = html.replace(/\s*<script type="module" src="\/src\/main\.js"><\/script>/, "");
 html = html.replace("</body>", `<script type="module">\n${bootstrap.replaceAll("</script", "<\\/script")}\n</script>\n<script id="open-source-licenses" type="text/plain">${licenses.replaceAll("</script", "<\\/script")}</script>\n</body>`);
-html = html.replace("<title>", '<meta name="star-color-build" content="single-file-v2.2.0" />\n    <title>');
+html = html.replace("<title>", '<meta name="star-color-build" content="single-file-v2.2.1" />\n    <title>');
 mkdirSync(dirname(output), { recursive: true });
 writeFileSync(output, html);
 console.log(`${output}\n${Buffer.byteLength(html)} bytes`);

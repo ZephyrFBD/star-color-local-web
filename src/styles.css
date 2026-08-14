@@ -69,7 +69,7 @@ input[type="range"] { width: 100%; margin: 12px 0 0; accent-color: #8aaffb; }
 .background-choice legend { margin-bottom: 10px; }
 .background-choice label { flex: 1; }
 .background-choice input { position: absolute; opacity: 0; }
-.background-choice span { display: grid; place-items: center; height: 42px; border: 1px solid #2b3542; border-radius: 10px; color: #919cac; cursor: pointer; }
+.background-choice span { display: flex; align-items: center; justify-content: center; height: 42px; padding: 0 8px; border: 1px solid #2b3542; border-radius: 10px; color: #919cac; line-height: 1.2; text-align: center; cursor: pointer; }
 .background-choice input:checked + span { color: #e9f0ff; border-color: #668bd2; background: #17233a; }
 .background-hint { margin: -14px 0 0; color: #737f90; font-size: .74rem; line-height: 1.5; }
 .switch-row { display: flex; align-items: center; justify-content: space-between; gap: 18px; cursor: pointer; }
