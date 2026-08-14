@@ -11,6 +11,7 @@ The interface defaults to English and can be switched to Chinese at any time.
 - Preserves each star's original color and relative brightness instead of normalizing faint and bright stars to the same level.
 - Provides adjustable detection strictness, star expansion, background-repair expansion, brightness gain, background mode, Gaussian scales, area and size limits, chroma filtering, halo retention, and landscape filtering. Every control shows its valid range or available choices and its default value.
 - Keeps the common brightness-gain slider at 0×–10× while allowing precise manual values from 0× to 1000×; the default remains 5×.
+- Adds an independent HDR star-output switch. When enabled, the browser exports a 16-bit Rec.2100 PQ PNG and applies a separate 1×–1000× HDR gain only to detected starlight; the reconstructed or selected background remains at its normal SDR-relative brightness. HDR output is off by default and HDR gain defaults to 1×.
 - Offers black, transparent, and preserved-background output. Preserve-background mode removes detected stars, reconstructs a starless background from nearby non-star pixels, and adds the uniformly enhanced linear starlight back. Its independent repair expansion defaults to 3 px beyond the detected star footprint, without changing star detection or extracted-star brightness.
 - Tries WebGPU after a correctness self-test and automatically falls back to a CPU Worker if WebGPU is unavailable or fails.
 - Shows staged progress, a preview, and a downloadable PNG.
