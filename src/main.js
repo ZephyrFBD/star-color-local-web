@@ -1,3 +1,5 @@
+import { createStoredZip } from "./zip.js";
+
 const RAW_EXTENSIONS = new Set(["dng", "nef", "nrw", "cr2", "cr3", "arw", "raf", "rw2", "orf", "pef", "raw"]);
 const DEFAULTS = Object.freeze({
   threshold: 8,
@@ -36,12 +38,12 @@ const TEXT = {
     "range.threshold": "Range: 4–14 · Default: 8", "range.radius": "Range: 0–6 px · Default: 3 px", "range.repairRadius": "Range: 0–64 px · Default: 3 px", "range.gain": "Slider: 0×–10× · Manual: 0×–1000× · Default: 5×", "range.background": "Options: Black / Transparent / Preserve · Default: Preserve", "range.hdr": "Options: Off / On · Default: Off", "range.hdrGain": "Range: 1×–1000× · Default: 1×", "range.landscape": "Options: Off / On · Default: On", "range.gpu": "Options: Off / On · Default: On", "range.parallel": "Range: 1–4 · Default: 2",
     "range.core": "Range: 0.25–2 · Default: 0.65", "range.surround": "Range: 1–10 · Default: 3", "range.backgroundSigma": "Range: 4–40 · Default: 12", "range.minArea": "Range: 1–20 px² · Default: 1 px²", "range.maxArea": "Range: 1–400 px² · Default: 60 px²", "range.maxSize": "Range: 3–60 px · Default: 14 px", "range.chroma": "Range: 0.34–1 · Default: 0.72", "range.halo": "Range: -1–3 · Default: 0.2", "range.sky": "Range: 0.5–1.2 · Default: 0.9", "range.landscapeScale": "Range: 4–64 px · Default: 16 px", "range.landscapeBlur": "Range: 0–12 · Default: 4",
     "advanced.title": "Advanced detection settings", "advanced.hint": "Every option has a default value", "advanced.core": "Star core scale", "advanced.surround": "Surround scale", "advanced.background": "Background scale", "advanced.minArea": "Minimum star area", "advanced.maxArea": "Maximum star area", "advanced.maxSize": "Maximum star size", "advanced.chroma": "Monochrome spike limit", "advanced.halo": "Halo retention floor", "advanced.sky": "Cool-sky ratio", "advanced.landscapeScale": "Landscape sample spacing", "advanced.landscapeBlur": "Landscape smoothing scale", "advanced.reset": "Restore all defaults",
-    "action.extract": "Extract color stars locally", "action.extractBatch": "Process {count} files locally", "action.processing": "Processing locally…", "action.processingBatch": "Processing {count} files…", "action.download": "Download color PNG", "action.downloadSelected": "Download selected PNG", "action.downloadAll": "Download all completed PNGs", "progress.readFile": "Read file", "progress.notStarted": "Not started",
+    "action.extract": "Extract color stars locally", "action.extractBatch": "Process {count} files locally", "action.processing": "Processing locally…", "action.processingBatch": "Processing {count} files…", "action.download": "Download color PNG", "action.downloadSelected": "Download selected PNG", "action.downloadAll": "Download all as ZIP", "action.zipping": "Building ZIP {percent}%", "progress.readFile": "Read file", "progress.notStarted": "Not started",
     "preview.title": "Color stars", "preview.waiting": "Waiting", "preview.empty": "Your local result will appear here", "preview.alt": "Extracted color stars", "preview.processing": "Analyzing starlight locally…", "privacy.footer": "Photo data is never sent over the network. Closing or refreshing this tab releases the temporary processing data.",
     "file.raw": "Camera RAW (16-bit linear decode)", "file.standard": "Standard image (converted to linear light)", "status.fileLocal": "The file remains in this tab's memory and is never uploaded.", "error.outOfRange": "{field} is outside the valid range", "error.surround": "Surround scale must be greater than star core scale", "error.area": "Maximum star area cannot be smaller than minimum star area",
     "raw.read": "Read RAW", "raw.load": "Loading the local 16-bit RAW decoder", "common.cancelled": "Cancelled", "raw.decode": "Decode RAW", "raw.fullParallel": "16-bit linear full resolution · browser parallel", "raw.fullLow": "16-bit linear full resolution · low-memory single thread", "error.rawSize": "The RAW file does not contain valid full-resolution dimensions", "error.rawDecode": "The RAW decoder returned no valid image; this camera compression format may not be supported yet", "image.read": "Read image", "image.decode": "Decoding the local image in your browser",
     "status.localProcessing": "All computation stays in this browser tab. Keep the page open while processing large RAW files.", "decode.complete": "Decode complete", "decode.memory": "{width} × {height} · estimated peak memory {memory}", "error.memory": "This image is estimated to require about {memory}, above the browser safety limit. Close other tabs and try again; resolution will not be reduced.", "error.worker": "The processing Worker stopped unexpectedly",
-    "result.meta": "{width} × {height} · {stars} stars", "result.done": "Done: retained {stars} stars and {pixels} color pixels. The original image was not uploaded.", "status.cancelled": "Processing cancelled; temporary local data was released.", "status.failed": "Processing failed: {error}", "status.noOutput": "An error occurred; no output file was created", "status.defaults": "All parameters were restored to their defaults.", "batch.overall": "Overall progress", "batch.running": "{completed}/{total} finished · {running} active · up to {parallel} parallel", "batch.complete": "Batch complete: {completed} files processed.", "batch.completeErrors": "Batch complete: {completed} succeeded, {failed} failed.", "batch.result": "{stars} stars · {size}",
+    "result.meta": "{width} × {height} · {stars} stars", "result.done": "Done: retained {stars} stars and {pixels} color pixels. The original image was not uploaded.", "status.cancelled": "Processing cancelled; temporary local data was released.", "status.failed": "Processing failed: {error}", "status.noOutput": "An error occurred; no output file was created", "status.defaults": "All parameters were restored to their defaults.", "batch.overall": "Overall progress", "batch.running": "{completed}/{total} finished · {running} active · up to {parallel} parallel", "batch.complete": "Batch complete: {completed} files processed.", "batch.completeErrors": "Batch complete: {completed} succeeded, {failed} failed.", "batch.result": "{stars} stars · {size}", "zip.progress": "Packaging {completed}/{total} files · {percent}%", "zip.complete": "ZIP ready: {count} files · {size}",
   },
   zh: {
     "meta.title": "本地彩色星点提取器", "meta.description": "照片完全在浏览器本地处理的彩色星点提取器",
@@ -55,12 +57,12 @@ const TEXT = {
     "range.threshold": "范围：4–14 · 默认：8", "range.radius": "范围：0–6 px · 默认：3 px", "range.repairRadius": "范围：0–64 px · 默认：3 px", "range.gain": "滑块：0×–10× · 手动输入：0×–1000× · 默认：5×", "range.background": "选项：黑色 / 透明 / 保留背景 · 默认：保留背景", "range.hdr": "选项：关 / 开 · 默认：关", "range.hdrGain": "范围：1×–1000× · 默认：1×", "range.landscape": "选项：关 / 开 · 默认：开", "range.gpu": "选项：关 / 开 · 默认：开", "range.parallel": "范围：1–4 · 默认：2",
     "range.core": "范围：0.25–2 · 默认：0.65", "range.surround": "范围：1–10 · 默认：3", "range.backgroundSigma": "范围：4–40 · 默认：12", "range.minArea": "范围：1–20 px² · 默认：1 px²", "range.maxArea": "范围：1–400 px² · 默认：60 px²", "range.maxSize": "范围：3–60 px · 默认：14 px", "range.chroma": "范围：0.34–1 · 默认：0.72", "range.halo": "范围：-1–3 · 默认：0.2", "range.sky": "范围：0.5–1.2 · 默认：0.9", "range.landscapeScale": "范围：4–64 px · 默认：16 px", "range.landscapeBlur": "范围：0–12 · 默认：4",
     "advanced.title": "高级检测参数", "advanced.hint": "全部参数均有默认值", "advanced.core": "星核尺度", "advanced.surround": "周边尺度", "advanced.background": "背景尺度", "advanced.minArea": "最小星点面积", "advanced.maxArea": "最大星点面积", "advanced.maxSize": "最大星点边长", "advanced.chroma": "单色尖峰上限", "advanced.halo": "光晕保留阈值", "advanced.sky": "天空冷色比例", "advanced.landscapeScale": "地景采样间隔", "advanced.landscapeBlur": "地景平滑尺度", "advanced.reset": "恢复全部默认值",
-    "action.extract": "在本机提取彩色星点", "action.extractBatch": "在本机处理 {count} 个文件", "action.processing": "正在本机处理…", "action.processingBatch": "正在处理 {count} 个文件…", "action.download": "下载彩色 PNG", "action.downloadSelected": "下载当前 PNG", "action.downloadAll": "下载全部已完成 PNG", "progress.readFile": "读取文件", "progress.notStarted": "尚未开始",
+    "action.extract": "在本机提取彩色星点", "action.extractBatch": "在本机处理 {count} 个文件", "action.processing": "正在本机处理…", "action.processingBatch": "正在处理 {count} 个文件…", "action.download": "下载彩色 PNG", "action.downloadSelected": "下载当前 PNG", "action.downloadAll": "打包全部为 ZIP", "action.zipping": "正在生成 ZIP {percent}%", "progress.readFile": "读取文件", "progress.notStarted": "尚未开始",
     "preview.title": "彩色星点", "preview.waiting": "等待处理", "preview.empty": "本地处理结果将在这里显示", "preview.alt": "彩色星点提取结果", "preview.processing": "正在本机分析星光…", "privacy.footer": "照片内容不会通过网络发送。关闭或刷新页面后，本次处理数据即从页面内存中释放。",
     "file.raw": "相机 RAW（16 位线性解码）", "file.standard": "标准图片（转为线性光）", "status.fileLocal": "文件仅保存在当前页面内存中，不会上传。", "error.outOfRange": "{field} 超出有效范围", "error.surround": "周边尺度必须大于星核尺度", "error.area": "最大星点面积不能小于最小面积",
     "raw.read": "读取 RAW", "raw.load": "加载本地 16 位 RAW 解码器", "common.cancelled": "已取消", "raw.decode": "解码 RAW", "raw.fullParallel": "16 位线性全分辨率 · 浏览器并行", "raw.fullLow": "16 位线性全分辨率 · 低内存单线程", "error.rawSize": "RAW 文件缺少有效的全分辨率尺寸信息", "error.rawDecode": "RAW 解码器没有返回有效图像；该相机压缩格式可能暂不受支持", "image.read": "读取图片", "image.decode": "浏览器正在解码本地文件",
     "status.localProcessing": "所有计算都在这个浏览器标签页内进行。处理大 RAW 时请保持页面开启。", "decode.complete": "解码完成", "decode.memory": "{width} × {height} · 预计峰值内存约 {memory}", "error.memory": "该图片预计需要约 {memory} 内存，超过浏览器安全上限。可关闭其他标签页后再试；不会自动降分辨率。", "error.worker": "处理 Worker 意外终止",
-    "result.meta": "{width} × {height} · {stars} 颗星", "result.done": "完成：保留 {stars} 颗星、{pixels} 个彩色像素。原图没有上传。", "status.cancelled": "处理已取消；本地临时数据已释放。", "status.failed": "处理失败：{error}", "status.noOutput": "发生错误，未生成输出文件", "status.defaults": "参数已恢复默认值。", "batch.overall": "总体进度", "batch.running": "已完成 {completed}/{total} · {running} 个运行中 · 最多并行 {parallel} 个", "batch.complete": "批量处理完成：已处理 {completed} 个文件。", "batch.completeErrors": "批量处理完成：{completed} 个成功，{failed} 个失败。", "batch.result": "{stars} 颗星 · {size}",
+    "result.meta": "{width} × {height} · {stars} 颗星", "result.done": "完成：保留 {stars} 颗星、{pixels} 个彩色像素。原图没有上传。", "status.cancelled": "处理已取消；本地临时数据已释放。", "status.failed": "处理失败：{error}", "status.noOutput": "发生错误，未生成输出文件", "status.defaults": "参数已恢复默认值。", "batch.overall": "总体进度", "batch.running": "已完成 {completed}/{total} · {running} 个运行中 · 最多并行 {parallel} 个", "batch.complete": "批量处理完成：已处理 {completed} 个文件。", "batch.completeErrors": "批量处理完成：{completed} 个成功，{failed} 个失败。", "batch.result": "{stars} 颗星 · {size}", "zip.progress": "正在打包 {completed}/{total} 个文件 · {percent}%", "zip.complete": "ZIP 已生成：{count} 个文件 · {size}",
   },
 };
 
@@ -82,6 +84,7 @@ let currentPreviewId = null;
 let batchToken = 0;
 let engineState = "detect";
 let busyState = false;
+let archiveState = null;
 let statusState = null;
 
 function applyLocale() {
@@ -137,7 +140,7 @@ function extension(file) { return file.name.split(".").pop()?.toLowerCase() || "
 function isRaw(file) { return RAW_EXTENSIONS.has(extension(file)); }
 
 function addFiles(files) {
-  if (busyState) return;
+  if (busyState || archiveState) return;
   const known = new Set(jobs.map((job) => `${job.file.name}\0${job.file.size}\0${job.file.lastModified}`));
   for (const file of files) {
     const key = `${file.name}\0${file.size}\0${file.lastModified}`;
@@ -196,7 +199,7 @@ function renderFileList() {
     const remove = document.createElement("button");
     remove.className = "icon-button";
     remove.type = "button";
-    remove.disabled = busyState;
+    remove.disabled = busyState || Boolean(archiveState);
     remove.setAttribute("aria-label", t("file.remove"));
     remove.textContent = "×";
     remove.addEventListener("click", () => removeJob(job.id));
@@ -227,7 +230,7 @@ function updateJobRow(job) {
 }
 
 function removeJob(id) {
-  if (busyState) return;
+  if (busyState || archiveState) return;
   const index = jobs.findIndex((job) => job.id === id);
   if (index < 0) return;
   if (jobs[index].resultUrl) URL.revokeObjectURL(jobs[index].resultUrl);
@@ -241,7 +244,7 @@ function removeJob(id) {
 }
 
 function clearFiles() {
-  if (busyState) return;
+  if (busyState || archiveState) return;
   for (const job of jobs) if (job.resultUrl) URL.revokeObjectURL(job.resultUrl);
   jobs = [];
   currentPreviewId = null;
@@ -307,10 +310,11 @@ function updateOverallProgress() {
 
 function setBusy(busy) {
   busyState = busy;
-  elements.extract.disabled = busy || jobs.length === 0;
-  elements.removeFile.disabled = busy;
-  elements.fileInput.disabled = busy;
-  for (const control of document.querySelectorAll(".controls input, .controls select, .controls button")) control.disabled = busy;
+  const locked = busy || Boolean(archiveState);
+  elements.extract.disabled = locked || jobs.length === 0;
+  elements.removeFile.disabled = locked;
+  elements.fileInput.disabled = locked;
+  for (const control of document.querySelectorAll(".controls input, .controls select, .controls button")) control.disabled = locked;
   elements.processing.classList.toggle("hidden", !busy || Boolean(currentPreviewId));
   const count = jobs.length;
   elements.buttonLabel.textContent = count > 1 ? t(busy ? "action.processingBatch" : "action.extractBatch", { count }) : t(busy ? "action.processing" : "action.extract");
@@ -405,7 +409,7 @@ function memoryBudget() {
 }
 
 async function processFiles() {
-  if (!jobs.length || busyState) return;
+  if (!jobs.length || busyState || archiveState) return;
   let config;
   try {
     config = options();
@@ -547,7 +551,8 @@ function renderResults() {
   const completed = jobs.filter((job) => job.status === "done");
   elements.resultList.classList.toggle("hidden", completed.length < 2);
   elements.downloadAll.classList.toggle("hidden", completed.length < 2);
-  elements.downloadAll.disabled = completed.length < 2;
+  elements.downloadAll.disabled = completed.length < 2 || Boolean(archiveState);
+  elements.downloadAll.textContent = archiveState ? t("action.zipping", { percent: archiveState.percent }) : t("action.downloadAll");
   const fragment = document.createDocumentFragment();
   for (const job of completed) {
     const button = document.createElement("button");
@@ -580,23 +585,76 @@ function updatePreview() {
     elements.emptyPreview.classList.add("hidden");
     const stars = job.result.stars.toLocaleString(locale === "zh" ? "zh-CN" : "en-US");
     elements.resultMeta.textContent = t("result.meta", { width: job.result.width, height: job.result.height, stars });
-    elements.download.disabled = false;
+    elements.download.disabled = Boolean(archiveState);
   }
   elements.processing.classList.toggle("hidden", !busyState || Boolean(job));
 }
 
+function outputFilename(job) {
+  const stem = job.file.name.replace(/\.[^.]+$/, "");
+  const base = job.background === "preserve" ? `${stem}_enhanced_stars_background` : `${stem}_color_stars`;
+  return `${base}${job.hdrOutput ? "_hdr" : ""}.png`;
+}
+
 function downloadJob(job) {
   if (!job?.resultUrl) return;
-  const stem = job.file.name.replace(/\.[^.]+$/, "");
   const anchor = document.createElement("a");
   anchor.href = job.resultUrl;
-  const base = job.background === "preserve" ? `${stem}_enhanced_stars_background` : `${stem}_color_stars`;
-  anchor.download = `${base}${job.hdrOutput ? "_hdr" : ""}.png`;
+  anchor.download = outputFilename(job);
   anchor.click();
 }
 
 function downloadResult() { downloadJob(jobs.find((job) => job.id === currentPreviewId)); }
-function downloadAllResults() { for (const job of jobs) if (job.status === "done") downloadJob(job); }
+
+function archiveEntries(completed) {
+  const used = new Set();
+  return completed.map((job) => {
+    const original = outputFilename(job).replaceAll("/", "_").replaceAll("\\", "_");
+    const dot = original.lastIndexOf(".");
+    const stem = dot > 0 ? original.slice(0, dot) : original;
+    const extension = dot > 0 ? original.slice(dot) : "";
+    let name = original;
+    let copy = 2;
+    while (used.has(name.toLocaleLowerCase())) name = `${stem}_${copy++}${extension}`;
+    used.add(name.toLocaleLowerCase());
+    return { name, blob: job.result.blob, date: new Date(job.file.lastModified || Date.now()) };
+  });
+}
+
+async function downloadAllResults() {
+  const completed = jobs.filter((job) => job.status === "done");
+  if (completed.length < 2 || archiveState || busyState) return;
+  archiveState = { percent: 0, completed: 0 };
+  setBusy(false);
+  renderResults();
+  updatePreview();
+  try {
+    const entries = archiveEntries(completed);
+    const zip = await createStoredZip(entries, (progress) => {
+      const percent = progress.totalBytes ? Math.min(100, Math.round(progress.processedBytes / progress.totalBytes * 100)) : Math.round(progress.completed / progress.total * 100);
+      if (archiveState.percent === percent && archiveState.completed === progress.completed) return;
+      archiveState = { percent, completed: progress.completed };
+      elements.downloadAll.textContent = t("action.zipping", { percent });
+      setStatusKey("zip.progress", { completed: progress.completed, total: progress.total, percent });
+    });
+    const url = URL.createObjectURL(zip);
+    const anchor = document.createElement("a");
+    anchor.href = url;
+    anchor.download = `star-color-results-${new Date().toISOString().slice(0, 10)}.zip`;
+    document.body.append(anchor);
+    anchor.click();
+    anchor.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 60_000);
+    setStatusKey("zip.complete", { count: entries.length, size: formatBytes(zip.size) });
+  } catch (error) {
+    setStatusKey("status.failed", { error: error?.message || String(error) }, true);
+  } finally {
+    archiveState = null;
+    setBusy(false);
+    renderResults();
+    updatePreview();
+  }
+}
 
 function resetDefaults() {
   for (const [key, value] of Object.entries(DEFAULTS)) {

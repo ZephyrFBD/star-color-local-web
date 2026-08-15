@@ -44,6 +44,9 @@ if (!runtimeWorker.includes("function j(e,t){return __singleNativeUrl(e,t)}")) t
 if (!runtimeWorker.includes("globalThis.__LUMA_NATIVE_JS_URL__=t")) throw new Error("Could not patch native pthread binding");
 
 let main = text("src/main.js");
+const zipSource = text("src/zip.js").replace("export async function createStoredZip", "async function createStoredZip");
+main = main.replace('import { createStoredZip } from "./zip.js";', zipSource);
+if (main.includes('from "./zip.js"') || /\bexport\s/.test(zipSource)) throw new Error("Could not inline the ZIP writer");
 main = main.replace(
   /  const runtimeUrl = .*?\n  const module = await import\(\/\* @vite-ignore \*\/ runtimeUrl\);/s,
   "  const module = globalThis.__singleRawRuntime;",

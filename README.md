@@ -17,6 +17,7 @@ The interface defaults to English and can be switched to Chinese at any time.
 - Shows staged progress, a preview, and a downloadable PNG.
 - Imports many files at once and processes up to four jobs concurrently. The default is two, with memory-aware scheduling that reduces active jobs when large RAW files would exceed a conservative client-side memory budget.
 - Shows an aggregate batch percentage plus independent stage, progress, success, and failure states for every file. Completed outputs can be previewed and downloaded individually or together.
+- Packages all completed batch outputs into one ZIP download with live packaging progress, avoiding browser multi-download limits. PNG files are stored without recompression and are read sequentially so ZIP creation does not duplicate every result in memory at once.
 
 ## Single-file build
 
